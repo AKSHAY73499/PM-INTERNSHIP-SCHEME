@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -36,6 +37,7 @@ export default function InternshipMatcher() {
   const [profile] = useLocalStorage('user-profile', { skills: '', interests: '', locationPreference: '' });
   const [internships, setInternships] = useState<InternshipWithScore[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -81,20 +83,48 @@ export default function InternshipMatcher() {
 
   const handleGeoLocation = () => {
     if (navigator.geolocation) {
+      setIsLocating(true);
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          // In a real app, you would use a reverse geocoding service.
-          // For now, we'll ask the user to confirm.
-          toast({
-            title: "Location Found",
-            description: "Please enter your city name in the location field.",
-          });
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            // Using a free, open reverse geocoding API
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+            const data = await response.json();
+            
+            const city = data.address.city || data.address.town || data.address.village;
+            const state = data.address.state;
+
+            if (city && state) {
+              const locationString = `${city}, ${state}`;
+              form.setValue("location", locationString);
+              toast({
+                title: "Location Found",
+                description: `Set location to ${locationString}.`,
+              });
+            } else {
+               toast({
+                variant: "destructive",
+                title: "Location Error",
+                description: "Could not determine your city from the coordinates.",
+              });
+            }
+          } catch (error) {
+             toast({
+                variant: "destructive",
+                title: "Location Error",
+                description: "Failed to fetch city name.",
+              });
+          } finally {
+            setIsLocating(false);
+          }
         },
         () => {
+          setIsLocating(false);
           toast({
             variant: "destructive",
             title: "Geolocation Error",
-            description: "Unable to retrieve your location.",
+            description: "Unable to retrieve your location. Please check your browser permissions.",
           });
         }
       );
@@ -155,8 +185,9 @@ export default function InternshipMatcher() {
                       <FormControl>
                         <Input placeholder="e.g., Bangalore, Remote" {...field} />
                       </FormControl>
-                      <Button type="button" variant="outline" onClick={handleGeoLocation}>
-                        <MapPin className="mr-2 h-4 w-4" /> Use my location
+                      <Button type="button" variant="outline" onClick={handleGeoLocation} disabled={isLocating}>
+                        {isLocating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MapPin className="mr-2 h-4 w-4" />}
+                         Use my location
                       </Button>
                     </div>
                     <FormMessage />
