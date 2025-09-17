@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -10,31 +11,30 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
+import { useLocalStorage } from "@/hooks/use-local-storage"
 
 export function UserNav() {
-  // In a real app, user details would come from auth state
-  const user = {
-      name: "Student Name",
-      email: "student@example.com",
-      role: "Student",
-  };
+  const [profile] = useLocalStorage('user-profile', {
+    name: 'Student',
+    email: 'student@example.com'
+  });
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-9 w-9 rounded-full">
           <Avatar className="h-9 w-9">
-            <AvatarImage src="https://picsum.photos/seed/avatar1/100/100" alt="@student" data-ai-hint="avatar person" />
-            <AvatarFallback>SN</AvatarFallback>
+            <AvatarImage src={`https://picsum.photos/seed/${profile.name}/100/100`} alt="@student" data-ai-hint="avatar person" />
+            <AvatarFallback>{profile.name ? profile.name.substring(0, 2).toUpperCase() : 'SN'}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.name}</p>
+            <p className="text-sm font-medium leading-none">{profile.name}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              {user.email}
+              {profile.email}
             </p>
           </div>
         </DropdownMenuLabel>

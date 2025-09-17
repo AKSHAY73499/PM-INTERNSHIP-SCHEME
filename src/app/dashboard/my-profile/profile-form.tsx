@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -13,6 +14,11 @@ import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Upload } from "lucide-react";
 
 const formSchema = z.object({
+  name: z.string().min(1, "Please enter your full name."),
+  email: z.string().email("Please enter a valid email address."),
+  phone: z.string().min(10, "Please enter a valid phone number."),
+  age: z.coerce.number().min(16, "You must be at least 16 years old.").max(100),
+  address: z.string().min(1, "Please enter your address."),
   skills: z.string().min(1, "Please enter at least one skill."),
   qualifications: z.string().min(1, "Please enter your qualifications."),
   interests: z.string().min(1, "Please enter at least one interest."),
@@ -25,6 +31,11 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function ProfileForm() {
   const [profile, setProfile] = useLocalStorage('user-profile', {
+    name: '',
+    email: '',
+    phone: '',
+    age: '',
+    address: '',
     skills: '',
     qualifications: '',
     interests: '',
@@ -58,6 +69,73 @@ export default function ProfileForm() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+               <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Priya Kumar" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email Address</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., priya.kumar@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., 9876543210" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="age"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Age</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="e.g., 21" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+             <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Address</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="e.g., 123, Main Street, Bangalore, 560001" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             <FormField
               control={form.control}
               name="qualifications"

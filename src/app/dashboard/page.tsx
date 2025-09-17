@@ -18,8 +18,11 @@ export default function Dashboard() {
     // This will run on the client after hydration
     const calculateProfileCompletion = () => {
       if (!profile) return 0;
-      const fields = ['skills', 'qualifications', 'interests', 'experience', 'locationPreference'];
-      const filledFields = fields.filter(field => profile[field as keyof typeof profile] && profile[field as keyof typeof profile].trim() !== '');
+      const fields = ['name', 'email', 'phone', 'age', 'address', 'skills', 'qualifications', 'interests', 'experience', 'locationPreference'];
+      const filledFields = fields.filter(field => {
+        const value = profile[field as keyof typeof profile];
+        return value && String(value).trim() !== '';
+      });
       return Math.round((filledFields.length / fields.length) * 100);
     };
 
