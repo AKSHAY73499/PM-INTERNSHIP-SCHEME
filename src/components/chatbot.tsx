@@ -110,12 +110,16 @@ export default function Chatbot() {
             msg.id === botMessageId ? { ...msg, audioUrl } : msg
           )
         );
-      } catch (audioError) {
+      } catch (audioError: any) {
         console.error("Text-to-speech error:", audioError);
+        let description = "Could not generate audio for the response.";
+        if (audioError?.message?.includes('429 Too Many Requests')) {
+          description = "Audio generation failed due to API quota limits."
+        }
         toast({
             variant: "destructive",
-            title: "Audio Error",
-            description: "Could not generate audio. Please check your API quota.",
+            title: "Audio Generation Failed",
+            description: description,
         });
       }
   
