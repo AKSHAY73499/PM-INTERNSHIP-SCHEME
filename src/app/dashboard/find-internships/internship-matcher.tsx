@@ -22,7 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, MapPin } from "lucide-react";
 import { matchInternships, MatchInternshipsOutput } from "@/ai/flows/internship-matching";
 import InternshipCard from "./internship-card";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 
 const formSchema = z.object({
