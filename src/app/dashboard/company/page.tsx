@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Pie, PieChart, Cell } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -12,9 +12,11 @@ import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
+import { getCompletedInterns, submitFeedback } from "@/services/companyService";
+import { Skeleton } from "@/components/ui/skeleton";
 
 
-// Mock Data for Analytics
+// Mock Data for Analytics - to be replaced with real data aggregation
 const skillDistributionData = [
   { name: 'React', value: 45 },
   { name: 'Python', value: 38 },
@@ -33,29 +35,50 @@ const applicantDiversityData = [
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
-// Mock Data for Feedback
-const initialCompletedInterns = [
-    { name: "Priya Sharma", role: "Frontend Developer Intern", status: "Completed" },
-    { name: "Rohan Kumar", role: "Data Science Intern", status: "Completed" },
-    { name: "Anjali Mehta", role: "Product Management Intern", status: "Awaiting Feedback" },
-    { name: "Vikram Singh", role: "Backend Developer Intern", status: "Completed" },
-];
-
 
 export default function CompanyDashboardPage() {
-    const [completedInterns, setCompletedInterns] = useState(initialCompletedInterns);
+    const [completedInterns, setCompletedInterns] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
 
-    const handleFeedbackSubmit = (internName: string) => {
-        setCompletedInterns(prevInterns => 
-            prevInterns.map(intern => 
-                intern.name === internName ? { ...intern, status: "Feedback Submitted" } : intern
-            )
-        );
-        toast({
-            title: "Feedback Submitted",
-            description: `Thank you for providing feedback for ${internName}.`,
-        });
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                setIsLoading(true);
+                const interns = await getCompletedInterns();
+                setCompletedInterns(interns);
+            } catch (error) {
+                 toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: "Failed to load intern data for feedback.",
+                });
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchData();
+    }, [toast]);
+
+    const handleFeedbackSubmit = async (internId: string, internName: string) => {
+        try {
+            await submitFeedback(internId, { rating: 8, comments: "Great work!" });
+            setCompletedInterns(prevInterns => 
+                prevInterns.map(intern => 
+                    intern.id === internId ? { ...intern, status: "Feedback Submitted" } : intern
+                )
+            );
+            toast({
+                title: "Feedback Submitted",
+                description: `Thank you for providing feedback for ${internName}.`,
+            });
+        } catch (error) {
+             toast({
+                variant: "destructive",
+                title: "Error",
+                description: `Failed to submit feedback for ${internName}.`,
+            });
+        }
     };
 
   return (
@@ -137,8 +160,15 @@ export default function CompanyDashboardPage() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {completedInterns.map((intern, index) => (
-                        <TableRow key={index}>
+                    {isLoading ? Array.from({length: 3}).map((_, i) => (
+                        <TableRow key={i}>
+                            <TableCell><Skeleton className="h-5 w-28" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-36" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                            <TableCell className="text-right"><Skeleton className="h-9 w-36" /></TableCell>
+                        </TableRow>
+                    )) : completedInterns.map((intern) => (
+                        <TableRow key={intern.id}>
                             <TableCell className="font-medium">{intern.name}</TableCell>
                             <TableCell>{intern.role}</TableCell>
                             <TableCell>{intern.status}</TableCell>
@@ -170,7 +200,7 @@ export default function CompanyDashboardPage() {
                                             </div>
                                             <DialogFooter>
                                                 <DialogClose asChild>
-                                                    <Button type="button" onClick={() => handleFeedbackSubmit(intern.name)}>Submit Feedback</Button>
+                                                    <Button type="button" onClick={() => handleFeedbackSubmit(intern.id, intern.name)}>Submit Feedback</Button>
                                                 </DialogClose>
                                             </DialogFooter>
                                         </DialogContent>
@@ -188,4 +218,3 @@ export default function CompanyDashboardPage() {
     </div>
   );
 }
-

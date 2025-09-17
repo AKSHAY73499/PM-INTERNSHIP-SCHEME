@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,27 +12,39 @@ import { shortlistCandidates, ShortlistCandidatesOutput } from "@/ai/flows/candi
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-// Mock Data
-const mockInternships = [
-  { id: "swe1", title: "Software Development Intern", requiredSkills: ["React", "Node.js", "TypeScript"] },
-  { id: "ds1", title: "Data Science Intern", requiredSkills: ["Python", "Pandas", "SQL"] },
-  { id: "pm1", title: "Product Management Intern", requiredSkills: ["JIRA", "Agile", "Market Research"] },
-];
-
-const mockStudents = [
-    { name: "Amit Kumar", skills: ["React", "TypeScript", "Next.js"], qualifications: "B.Tech CSE", experience: "Built a social media app." },
-    { name: "Sneha Reddy", skills: ["Python", "PyTorch", "Data Analysis"], qualifications: "M.Sc Data Science", experience: "Kaggle competition winner." },
-    { name: "Raj Patel", skills: ["Java", "Spring Boot"], qualifications: "B.E. IT", experience: "" },
-    { name: "Priya Singh", skills: ["React", "Node.js", "MongoDB", "TypeScript"], qualifications: "B.Tech CSE", experience: "Full-stack e-commerce project." },
-    { name: "Kavita Joshi", skills: ["Python", "Pandas", "SQL", "Tableau"], qualifications: "B.Sc Statistics", experience: "Analyzed sales data for a retail client." },
-];
+import { getCompanyInternships, getCompanyStudents } from "@/services/companyService";
 
 export default function CompanyApplicationsPage() {
+  const [internships, setInternships] = useState<any[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
   const [selectedInternshipId, setSelectedInternshipId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(true);
   const [shortlist, setShortlist] = useState<ShortlistCandidatesOutput>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    async function fetchData() {
+        try {
+            setIsLoadingData(true);
+            const [internshipsData, studentsData] = await Promise.all([
+                getCompanyInternships(),
+                getCompanyStudents()
+            ]);
+            setInternships(internshipsData);
+            setStudents(studentsData);
+        } catch (error) {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Could not load initial data."
+            });
+        } finally {
+            setIsLoadingData(false);
+        }
+    }
+    fetchData();
+  }, [toast]);
 
   const handleShortlist = async () => {
     if (!selectedInternshipId) {
@@ -48,7 +60,7 @@ export default function CompanyApplicationsPage() {
     setShortlist([]);
     
     try {
-        const internship = mockInternships.find(i => i.id === selectedInternshipId);
+        const internship = internships.find(i => i.id === selectedInternshipId);
         if (!internship) throw new Error("Internship not found");
 
       const result = await shortlistCandidates({
@@ -56,7 +68,7 @@ export default function CompanyApplicationsPage() {
           title: internship.title,
           requiredSkills: internship.requiredSkills,
         },
-        students: mockStudents,
+        students: students,
       });
 
       setShortlist(result);
@@ -77,6 +89,28 @@ export default function CompanyApplicationsPage() {
     }
   };
 
+  if (isLoadingData) {
+      return (
+          <div className="space-y-6">
+               <div>
+                    <h1 className="text-3xl font-bold font-headline">Received Applications</h1>
+                    <p className="text-muted-foreground">
+                    View AI-shortlisted candidates and manage your hiring process.
+                    </p>
+                </div>
+                <Card>
+                    <CardHeader>
+                        <Skeleton className="h-6 w-48" />
+                        <Skeleton className="h-4 w-full max-w-sm" />
+                    </CardHeader>
+                    <CardContent>
+                        <Skeleton className="h-10 w-full" />
+                    </CardContent>
+                </Card>
+          </div>
+      )
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -96,7 +130,7 @@ export default function CompanyApplicationsPage() {
                     <SelectValue placeholder="Select an internship..." />
                 </SelectTrigger>
                 <SelectContent>
-                    {mockInternships.map(internship => (
+                    {internships.map(internship => (
                         <SelectItem key={internship.id} value={internship.id}>
                             {internship.title}
                         </SelectItem>
@@ -215,3 +249,4 @@ export default function CompanyApplicationsPage() {
     </div>
   );
 }
+

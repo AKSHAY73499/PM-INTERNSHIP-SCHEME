@@ -8,35 +8,57 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Building, Briefcase, ShieldCheck, ArrowRight, CheckCircle, Shield, BarChart, FileWarning, MessageSquareWarning, Star } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-
-const mockTotals = {
-    students: 15840,
-    companies: 1230,
-    internships: 4590,
-    pendingVerifications: 4,
-};
-
-const mockActivities = [
-    { type: "company-registration", detail: "Innovate Inc. just registered.", timestamp: "2 mins ago" },
-    { type: "internship-post", detail: "Tech Solutions posted a 'Frontend Dev' role with 5 stars.", timestamp: "15 mins ago" },
-    { type: "verification-cleared", detail: "Student profile for Priya Sharma was auto-verified.", timestamp: "1 hour ago" },
-    { type: "report-generated", detail: "Weekly analytics report is ready.", timestamp: "3 hours ago" },
-];
-
-const mockDisputes = [
-    { id: "d1", issue: "Unpaid Stipend", parties: "Ananya vs. BizCorp", date: "2024-07-20", status: "New" },
-    { id: "d2", issue: "Fake Internship Posting", parties: "System Flagged", date: "2024-07-19", status: "Under Review" },
-    { id: "d3", issue: "Unfair Rejection", parties: "Ravi K. vs. Data Dynamics", date: "2024-07-18", status: "Resolved" },
-];
+import { useState, useEffect } from "react";
+import { getPlatformTotals, getRecentActivities, getDisputes, updateDispute } from "@/services/adminService";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AdminDashboardPage() {
     const { toast } = useToast();
+    const [totals, setTotals] = useState<any>(null);
+    const [activities, setActivities] = useState<any[]>([]);
+    const [disputes, setDisputes] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const handleDisputeAction = (id: string, action: string) => {
-        toast({
-            title: "Dispute Updated",
-            description: `Dispute ${id} has been marked as '${action}'.`
-        });
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                setIsLoading(true);
+                const [totalsData, activitiesData, disputesData] = await Promise.all([
+                    getPlatformTotals(),
+                    getRecentActivities(),
+                    getDisputes()
+                ]);
+                setTotals(totalsData);
+                setActivities(activitiesData);
+                setDisputes(disputesData);
+            } catch (error) {
+                toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: "Failed to load dashboard data."
+                });
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchData();
+    }, [toast]);
+
+    const handleDisputeAction = async (id: string, action: string) => {
+        try {
+            await updateDispute(id, action);
+            setDisputes(prev => prev.map(d => d.id === id ? { ...d, status: action } : d));
+            toast({
+                title: "Dispute Updated",
+                description: `Dispute ${id} has been marked as '${action}'.`
+            });
+        } catch (error) {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Failed to update dispute status."
+            });
+        }
     };
 
     const getActivityIcon = (type: string) => {
@@ -65,7 +87,7 @@ export default function AdminDashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockTotals.students.toLocaleString()}</div>
+            {isLoading || !totals ? <Skeleton className="h-8 w-20" /> : <div className="text-2xl font-bold">{totals.students.toLocaleString()}</div>}
             <p className="text-xs text-muted-foreground">Registered on the platform</p>
           </CardContent>
         </Card>
@@ -75,7 +97,7 @@ export default function AdminDashboardPage() {
             <Building className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockTotals.companies.toLocaleString()}</div>
+            {isLoading || !totals ? <Skeleton className="h-8 w-20" /> : <div className="text-2xl font-bold">{totals.companies.toLocaleString()}</div>}
             <p className="text-xs text-muted-foreground">Offering internships</p>
           </CardContent>
         </Card>
@@ -85,7 +107,7 @@ export default function AdminDashboardPage() {
             <Briefcase className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockTotals.internships.toLocaleString()}</div>
+             {isLoading || !totals ? <Skeleton className="h-8 w-20" /> : <div className="text-2xl font-bold">{totals.internships.toLocaleString()}</div>}
             <p className="text-xs text-muted-foreground">Available for students</p>
           </CardContent>
         </Card>
@@ -95,7 +117,7 @@ export default function AdminDashboardPage() {
             <ShieldCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockTotals.pendingVerifications}</div>
+            <div className="text-2xl font-bold">{totals?.pendingVerifications || 4}</div>
              <p className="text-xs text-muted-foreground">Items needing manual review</p>
           </CardContent>
         </Card>
@@ -118,7 +140,14 @@ export default function AdminDashboardPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {mockDisputes.map(dispute => (
+                        {isLoading ? Array.from({length: 3}).map((_, i) => (
+                            <TableRow key={i}>
+                                <TableCell><Skeleton className="h-5 w-28" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-36" /></TableCell>
+                                <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                                <TableCell className="text-right"><Skeleton className="h-8 w-24" /></TableCell>
+                            </TableRow>
+                        )) : disputes.map(dispute => (
                              <TableRow key={dispute.id}>
                                 <TableCell className="font-medium">{dispute.issue}</TableCell>
                                 <TableCell>{dispute.parties}</TableCell>
@@ -172,7 +201,15 @@ export default function AdminDashboardPage() {
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">
-                    {mockActivities.map((activity, index) => (
+                    {isLoading ? Array.from({length: 4}).map((_, i) => (
+                        <div key={i} className="flex items-center gap-4">
+                            <Skeleton className="h-10 w-10 rounded-full" />
+                            <div className="flex-1 space-y-2">
+                                <Skeleton className="h-4 w-3/4" />
+                                <Skeleton className="h-3 w-1/4" />
+                            </div>
+                        </div>
+                    )): activities.map((activity, index) => (
                          <div key={index} className="flex items-center gap-4">
                             <div className="p-2 bg-muted rounded-full">
                                {getActivityIcon(activity.type)}
@@ -189,5 +226,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-
-    

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Users, Building, Briefcase, Award } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from '@/components/ui/skeleton';
+import { getPlatformTotals, getRegionalData } from '@/services/adminService';
 
 type RegionStat = {
   state: string;
@@ -16,37 +17,42 @@ type RegionStat = {
   internships: number;
 };
 
-// Mock data simulating a backend fetch
-const mockRegionalData: RegionStat[] = [
-  { state: "Maharashtra", students: 1250, companies: 150, internships: 450 },
-  { state: "Karnataka", students: 1100, companies: 180, internships: 520 },
-  { state: "Delhi", students: 950, companies: 200, internships: 600 },
-  { state: "Tamil Nadu", students: 850, companies: 120, internships: 380 },
-  { state: "Uttar Pradesh", students: 1500, companies: 90, internships: 300 },
-  { state: "West Bengal", students: 700, companies: 80, internships: 250 },
-];
-
-const mockTotals = {
-    students: 15840,
-    companies: 1230,
-    internships: 4590,
-    placements: 1820
+type Totals = {
+    students: number;
+    companies: number;
+    internships: number;
+    placements: number;
 }
 
 export default function AdminAnalyticsPage() {
   const [regionalData, setRegionalData] = useState<RegionStat[]>([]);
+  const [totals, setTotals] = useState<Totals | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Simulate fetching data
-    const timer = setTimeout(() => {
-      setRegionalData(mockRegionalData);
-      setIsLoading(false);
-    }, 1500);
-
-    return () => clearTimeout(timer);
-  }, []);
+    async function fetchData() {
+        try {
+            setIsLoading(true);
+            const [totalsData, regionData] = await Promise.all([
+                getPlatformTotals(),
+                getRegionalData()
+            ]);
+            setTotals(totalsData);
+            setRegionalData(regionData);
+        } catch (error) {
+            console.error("Failed to fetch analytics data:", error);
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Could not load analytics data."
+            })
+        } finally {
+            setIsLoading(false);
+        }
+    }
+    fetchData();
+  }, [toast]);
 
   const handleDownload = (state: string) => {
     toast({
@@ -92,7 +98,7 @@ export default function AdminAnalyticsPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {isLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-2xl font-bold">{mockTotals.students.toLocaleString()}</div>}
+            {isLoading || !totals ? <Skeleton className="h-8 w-24" /> : <div className="text-2xl font-bold">{totals.students.toLocaleString()}</div>}
             <p className="text-xs text-muted-foreground">Registered on the platform</p>
           </CardContent>
         </Card>
@@ -102,7 +108,7 @@ export default function AdminAnalyticsPage() {
             <Building className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-             {isLoading ? <Skeleton className="h-8 w-20" /> : <div className="text-2xl font-bold">{mockTotals.companies.toLocaleString()}</div>}
+             {isLoading || !totals ? <Skeleton className="h-8 w-20" /> : <div className="text-2xl font-bold">{totals.companies.toLocaleString()}</div>}
             <p className="text-xs text-muted-foreground">Offering internships</p>
           </CardContent>
         </Card>
@@ -112,7 +118,7 @@ export default function AdminAnalyticsPage() {
             <Briefcase className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {isLoading ? <Skeleton className="h-8 w-20" /> : <div className="text-2xl font-bold">{mockTotals.internships.toLocaleString()}</div>}
+            {isLoading || !totals ? <Skeleton className="h-8 w-20" /> : <div className="text-2xl font-bold">{totals.internships.toLocaleString()}</div>}
             <p className="text-xs text-muted-foreground">Currently available for students</p>
           </CardContent>
         </Card>
@@ -122,7 +128,7 @@ export default function AdminAnalyticsPage() {
             <Award className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {isLoading ? <Skeleton className="h-8 w-20" /> : <div className="text-2xl font-bold">{mockTotals.placements.toLocaleString()}</div>}
+            {isLoading || !totals ? <Skeleton className="h-8 w-20" /> : <div className="text-2xl font-bold">{totals.placements.toLocaleString()}</div>}
             <p className="text-xs text-muted-foreground">Interns hired via platform</p>
           </CardContent>
         </Card>
@@ -156,7 +162,7 @@ export default function AdminAnalyticsPage() {
                             </TableRow>
                         ))
                     ) : (
-                        regionalData.map((stat) => (
+                        regionalData.map((stat: any) => (
                             <TableRow key={stat.state}>
                                 <TableCell className="font-medium">{stat.state}</TableCell>
                                 <TableCell className="text-right">{stat.students.toLocaleString()}</TableCell>
@@ -178,3 +184,4 @@ export default function AdminAnalyticsPage() {
     </div>
   );
 }
+

@@ -1,18 +1,15 @@
 
 "use client";
 
+import { useState, useEffect } from "react";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Pie, PieChart, Cell, Legend } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Users, Award, Lightbulb, GraduationCap } from "lucide-react";
+import { getInstituteStudents } from "@/services/instituteService";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
-// Mock Data
-const performanceData = [
-  { name: 'Hired', value: 45, fill: 'hsl(var(--chart-2))' },
-  { name: 'Interviewing', value: 80, fill: 'hsl(var(--chart-4))' },
-  { name: 'Applied', value: 150, fill: 'hsl(var(--chart-1))' },
-  { name: 'Not Applied', value: 75, fill: 'hsl(var(--chart-5))' },
-];
-
+// These would be calculated on a backend in a real app
 const skillGapData = [
   { skill: 'Python', missing: 120 },
   { skill: 'Communication', missing: 95 },
@@ -21,13 +18,43 @@ const skillGapData = [
   { skill: 'Cloud (AWS/Azure)', missing: 55 },
 ];
 
-const mockTotals = {
-    totalStudents: 350,
-    internshipsSecured: 45,
-    studentsWithGaps: 180,
-}
 
 export default function InstituteDashboardPage() {
+    const [students, setStudents] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const { toast } = useToast();
+
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                setIsLoading(true);
+                // Assuming instituteId is available from auth context
+                const studentsData = await getInstituteStudents("some-institute-id");
+                setStudents(studentsData);
+            } catch (error) {
+                 toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: "Failed to load dashboard data."
+                });
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchData();
+    }, [toast]);
+
+    const performanceData = [
+        { name: 'Hired', value: students.filter(s => s.internshipStatus === 'Hired').length, fill: 'hsl(var(--chart-2))' },
+        { name: 'Interviewing', value: students.filter(s => s.internshipStatus === 'Interviewing').length, fill: 'hsl(var(--chart-4))' },
+        { name: 'Applied', value: students.filter(s => s.internshipStatus === 'Applied').length, fill: 'hsl(var(--chart-1))' },
+        { name: 'Not Applied', value: students.filter(s => s.internshipStatus === 'Not Applied').length, fill: 'hsl(var(--chart-5))' },
+    ];
+
+    const internshipsSecured = students.filter(s => s.internshipStatus === 'Hired').length;
+    // Placeholder for skill gap calculation
+    const studentsWithGaps = Math.floor(students.length * 0.5);
+
   return (
     <div className="space-y-6">
       <div>
@@ -44,7 +71,7 @@ export default function InstituteDashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockTotals.totalStudents}</div>
+            {isLoading ? <Skeleton className="h-8 w-16" /> : <div className="text-2xl font-bold">{students.length}</div>}
             <p className="text-xs text-muted-foreground">Registered from your institute</p>
           </CardContent>
         </Card>
@@ -54,7 +81,7 @@ export default function InstituteDashboardPage() {
             <Award className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockTotals.internshipsSecured}</div>
+            {isLoading ? <Skeleton className="h-8 w-12" /> : <div className="text-2xl font-bold">{internshipsSecured}</div>}
             <p className="text-xs text-muted-foreground">Students successfully placed</p>
           </CardContent>
         </Card>
@@ -64,7 +91,7 @@ export default function InstituteDashboardPage() {
             <Lightbulb className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockTotals.studentsWithGaps}</div>
+            {isLoading ? <Skeleton className="h-8 w-12" /> : <div className="text-2xl font-bold">{studentsWithGaps}</div>}
             <p className="text-xs text-muted-foreground">Could benefit from training</p>
           </CardContent>
         </Card>
@@ -78,6 +105,7 @@ export default function InstituteDashboardPage() {
                 <CardDescription>Current internship status of all registered students.</CardDescription>
             </CardHeader>
             <CardContent>
+               {isLoading ? <Skeleton className="h-[250px] w-full" /> : (
                 <ResponsiveContainer width="100%" height={250}>
                     <PieChart>
                         <Pie data={performanceData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
@@ -89,6 +117,7 @@ export default function InstituteDashboardPage() {
                         <Legend />
                     </PieChart>
                 </ResponsiveContainer>
+               )}
             </CardContent>
         </Card>
 
@@ -98,6 +127,7 @@ export default function InstituteDashboardPage() {
                 <CardDescription>Identified skill gaps based on desired roles vs. student profiles.</CardDescription>
             </CardHeader>
             <CardContent>
+                {isLoading ? <Skeleton className="h-[250px] w-full" /> : (
                  <ResponsiveContainer width="100%" height={250}>
                     <BarChart data={skillGapData}>
                         <XAxis dataKey="skill" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
@@ -106,6 +136,7 @@ export default function InstituteDashboardPage() {
                         <Bar dataKey="missing" name="Students Missing Skill" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                     </BarChart>
                 </ResponsiveContainer>
+                )}
             </CardContent>
         </Card>
       </div>
