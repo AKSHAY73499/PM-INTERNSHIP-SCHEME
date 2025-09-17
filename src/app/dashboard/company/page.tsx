@@ -1,11 +1,18 @@
 
 "use client";
 
+import { useState } from "react";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Pie, PieChart, Cell } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Building, Star } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Slider } from "@/components/ui/slider";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { Label } from "@/components/ui/label";
+
 
 // Mock Data for Analytics
 const skillDistributionData = [
@@ -27,7 +34,7 @@ const applicantDiversityData = [
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 // Mock Data for Feedback
-const completedInterns = [
+const initialCompletedInterns = [
     { name: "Priya Sharma", role: "Frontend Developer Intern", status: "Completed" },
     { name: "Rohan Kumar", role: "Data Science Intern", status: "Completed" },
     { name: "Anjali Mehta", role: "Product Management Intern", status: "Awaiting Feedback" },
@@ -36,6 +43,21 @@ const completedInterns = [
 
 
 export default function CompanyDashboardPage() {
+    const [completedInterns, setCompletedInterns] = useState(initialCompletedInterns);
+    const { toast } = useToast();
+
+    const handleFeedbackSubmit = (internName: string) => {
+        setCompletedInterns(prevInterns => 
+            prevInterns.map(intern => 
+                intern.name === internName ? { ...intern, status: "Feedback Submitted" } : intern
+            )
+        );
+        toast({
+            title: "Feedback Submitted",
+            description: `Thank you for providing feedback for ${internName}.`,
+        });
+    };
+
   return (
     <div className="space-y-6">
       <div>
@@ -122,10 +144,37 @@ export default function CompanyDashboardPage() {
                             <TableCell>{intern.status}</TableCell>
                             <TableCell className="text-right">
                                 {intern.status === "Awaiting Feedback" ? (
-                                    <Button>
-                                        <Star className="mr-2 h-4 w-4" />
-                                        Provide Feedback
-                                    </Button>
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button>
+                                                <Star className="mr-2 h-4 w-4" />
+                                                Provide Feedback
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-[425px]">
+                                            <DialogHeader>
+                                                <DialogTitle>Feedback for {intern.name}</DialogTitle>
+                                                <DialogDescription>
+                                                    Rate their performance during the {intern.role} internship.
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <div className="grid gap-4 py-4">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="rating">Overall Rating (out of 10)</Label>
+                                                    <Slider defaultValue={[5]} max={10} step={1} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="comments">Comments</Label>
+                                                    <Textarea id="comments" placeholder="Enter your feedback..." />
+                                                </div>
+                                            </div>
+                                            <DialogFooter>
+                                                <DialogClose asChild>
+                                                    <Button type="button" onClick={() => handleFeedbackSubmit(intern.name)}>Submit Feedback</Button>
+                                                </DialogClose>
+                                            </DialogFooter>
+                                        </DialogContent>
+                                    </Dialog>
                                 ) : (
                                     <Button variant="outline" disabled>Feedback Submitted</Button>
                                 )}
