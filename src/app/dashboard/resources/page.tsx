@@ -41,7 +41,7 @@ export default function ResourcesPage() {
       </div>
       <div className="grid gap-6 md:grid-cols-2">
         {resources.map((resource, index) => (
-            <Link href={resource.href} key={index}>
+            <Link href={resource.href} key={index} className="no-underline">
                 <Card className="h-full hover:bg-muted/50 transition-colors">
                     <CardHeader className="flex flex-row items-start gap-4">
                         <resource.icon className="h-8 w-8 text-accent"/>
