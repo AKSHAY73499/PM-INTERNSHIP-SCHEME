@@ -1,12 +1,13 @@
+
 "use client";
 
+import React from "react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { Briefcase, Building, Calendar, MapPin, CheckCircle, Clock, Send, XCircle, TrendingUp } from "lucide-react";
+import { Briefcase, Calendar, CheckCircle, Clock, Send, XCircle, TrendingUp } from "lucide-react";
 
 type Application = {
   companyName: string;
@@ -16,13 +17,13 @@ type Application = {
   appliedDate: string;
 };
 
-const statusConfig = {
-    Interested: { icon: Clock, color: "text-sky-500 border-sky-500", label: "Interested" },
-    Applied: { icon: Send, color: "text-blue-500 border-blue-500", label: "Applied" },
-    Interviewing: { icon: TrendingUp, color: "text-yellow-500 border-yellow-500", label: "Interviewing" },
-    Offer: { icon: CheckCircle, color: "text-green-500 border-green-500", label: "Offer" },
-    Rejected: { icon: XCircle, color: "text-red-500 border-red-500", label: "Rejected" },
-}
+const statusConfig: Record<Application['status'], { icon: React.ElementType; color: string, label: string }> = {
+    Interested: { icon: Clock, color: "text-sky-500", label: "Interested" },
+    Applied: { icon: Send, color: "text-blue-500", label: "Applied" },
+    Interviewing: { icon: TrendingUp, color: "text-yellow-500", label: "Interviewing" },
+    Offer: { icon: CheckCircle, color: "text-green-500", label: "Offer" },
+    Rejected: { icon: XCircle, color: "text-red-500", label: "Rejected" },
+};
 
 export default function ApplicationTracker() {
   const [applications, setApplications] = useLocalStorage<Application[]>('tracked-applications', []);
@@ -90,7 +91,7 @@ export default function ApplicationTracker() {
                         {Object.entries(statusConfig).map(([key, config]) => (
                             <SelectItem key={key} value={key}>
                                  <div className="flex items-center gap-3">
-                                    {React.createElement(config.icon, { className: `h-4 w-4 ${config.color.split(' ')[0]}`})}
+                                    {React.createElement(config.icon, { className: `h-4 w-4 ${config.color}`})}
                                     <span>{config.label}</span>
                                 </div>
                             </SelectItem>
