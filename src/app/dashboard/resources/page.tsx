@@ -8,25 +8,25 @@ const resources = [
         title: "The Ultimate Resume Building Guide for Interns",
         description: "Learn how to craft a resume that stands out to recruiters and lands you your dream internship.",
         icon: FileText,
-        href: "https://www.indeed.com/career-advice/resumes-cover-letters/how-to-make-a-resume"
+        href: "https://www.thebalance.com/internship-resume-examples-and-writing-tips-2063567"
     },
     {
         title: "Ace Your Interview: Top 10 Preparation Tips",
         description: "From common questions to body language, we cover everything you need to know to impress in your interviews.",
         icon: Award,
-        href: "https://www.indeed.com/career-advice/interviewing/interview-tips-for-internships"
+        href: "https://hbr.org/2022/09/how-to-prepare-for-an-internship-interview"
     },
     {
         title: "How to Network Effectively at Career Fairs",
         description: "Discover strategies to make meaningful connections and leave a lasting impression on potential employers.",
         icon: Briefcase,
-        href: "https://careers.northeastern.edu/blog/how-to-network-at-a-career-fair/"
+        href: "https://www.linkedin.com/pulse/how-network-career-fairs-get-job-jason-hummel"
     },
     {
         title: "Understanding Skill Gaps and How to Bridge Them",
         description: "A deep dive into identifying the skills you need and finding the right courses to get you there.",
         icon: BookOpen,
-        href: "https://www.coursera.org/articles/skill-gap"
+        href: "https://www.pluralsight.com/blog/learn/skill-gap-analysis"
     }
 ]
 
