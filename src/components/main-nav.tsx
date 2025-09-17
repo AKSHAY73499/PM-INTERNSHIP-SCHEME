@@ -1,12 +1,6 @@
 "use client";
 
 import {
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-} from "@/components/ui/sidebar";
-import {
   Shield,
   LayoutDashboard,
   Search,
@@ -19,6 +13,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 const studentLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -55,44 +50,25 @@ const getLinksForRole = (pathname: string) => {
     return studentLinks; // default to student
 }
 
-const getRoleIcons = (pathname: string) => {
-    if (pathname.startsWith('/dashboard/company')) return Building;
-    if (pathname.startsWith('/dashboard/institute')) return GraduationCap;
-    if (pathname.startsWith('/dashboard/admin')) return Shield;
-    return UserCircle;
-}
-
 export default function MainNav() {
   const pathname = usePathname();
   const links = getLinksForRole(pathname);
-  const RoleIcon = getRoleIcons(pathname);
   
   return (
-    <>
-      <SidebarHeader>
-        <div className="flex items-center gap-2">
-          <Image src="/moca-logo.png" alt="MoCA Logo" width={36} height={36} />
-          <span className="text-lg font-bold text-sidebar-foreground">
-            AI for Internships
-          </span>
-        </div>
-      </SidebarHeader>
-      <SidebarMenu>
+    <nav className="flex flex-col gap-2 p-2">
         {links.map((link) => (
-          <SidebarMenuItem key={link.href}>
-            <SidebarMenuButton
-              asChild
-              isActive={pathname === link.href}
-              tooltip={link.label}
+          <Link
+            key={link.href}
+            href={link.href}
+            className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                pathname === link.href && "bg-muted text-primary"
+            )}
             >
-              <Link href={link.href}>
-                <link.icon />
-                <span>{link.label}</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+            <link.icon className="h-4 w-4" />
+            {link.label}
+          </Link>
         ))}
-      </SidebarMenu>
-    </>
+    </nav>
   );
 }
