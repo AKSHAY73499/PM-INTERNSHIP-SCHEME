@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect, FormEvent } from "react";
@@ -13,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { useToast } from "@/hooks/use-toast";
 
 type Message = {
+  id: string;
   text: string;
   isUser: boolean;
   audioUrl?: string;
@@ -87,21 +89,41 @@ export default function Chatbot() {
   const handleSend = async (e: FormEvent | Event, messageText: string = input) => {
     e.preventDefault();
     if (!messageText.trim() || isLoading) return;
-
-    const userMessage: Message = { text: messageText, isUser: true };
+  
+    const userMessageId = Date.now().toString();
+    const userMessage: Message = { id: userMessageId, text: messageText, isUser: true };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
-
+  
     try {
       const result = await multilingualChatbot({ language, message: messageText });
-      const { audioUrl } = await textToSpeech({ text: result.response });
-
-      const botMessage: Message = { text: result.response, isUser: false, audioUrl };
+      
+      const botMessageId = (Date.now() + 1).toString();
+      const botMessage: Message = { id: botMessageId, text: result.response, isUser: false };
       setMessages((prev) => [...prev, botMessage]);
-    } catch (error) {
-      console.error("Chatbot error:", error);
+  
+      try {
+        const { audioUrl } = await textToSpeech({ text: result.response });
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === botMessageId ? { ...msg, audioUrl } : msg
+          )
+        );
+      } catch (audioError) {
+        console.error("Text-to-speech error:", audioError);
+        toast({
+            variant: "destructive",
+            title: "Audio Error",
+            description: "Could not generate audio. Please check your API quota.",
+        });
+      }
+  
+    } catch (chatError) {
+      console.error("Chatbot error:", chatError);
+      const errorId = (Date.now() + 1).toString();
       const errorMessage: Message = {
+        id: errorId,
         text: "Sorry, I couldn't process that. Please try again.",
         isUser: false,
       };
@@ -144,9 +166,9 @@ export default function Chatbot() {
             </div>
             <ScrollArea className="flex-1 p-4">
               <div className="flex flex-col gap-4">
-                {messages.map((msg, index) => (
+                {messages.map((msg) => (
                   <div
-                    key={index}
+                    key={msg.id}
                     className={cn(
                       "flex items-end gap-2",
                       msg.isUser ? "justify-end" : "justify-start"
