@@ -12,22 +12,29 @@ import {
 import Link from "next/link"
 
 export function UserNav() {
+  // In a real app, user details would come from auth state
+  const user = {
+      name: "Student Name",
+      email: "student@example.com",
+      role: "Student",
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-9 w-9 rounded-full">
           <Avatar className="h-9 w-9">
             <AvatarImage src="https://picsum.photos/seed/avatar1/100/100" alt="@student" data-ai-hint="avatar person" />
-            <AvatarFallback>SC</AvatarFallback>
+            <AvatarFallback>SN</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">Student</p>
+            <p className="text-sm font-medium leading-none">{user.name}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              student@example.com
+              {user.email}
             </p>
           </div>
         </DropdownMenuLabel>
@@ -38,10 +45,13 @@ export function UserNav() {
               Profile
             </DropdownMenuItem>
           </Link>
+           <DropdownMenuItem>
+              Notifications
+            </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          Log out
+        <DropdownMenuItem asChild>
+          <Link href="/">Log out</Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

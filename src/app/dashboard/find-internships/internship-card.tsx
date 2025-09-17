@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Briefcase, MapPin, DollarSign } from "lucide-react";
+import { Briefcase, MapPin, DollarSign, TrendingUp } from "lucide-react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -15,6 +15,7 @@ type Internship = {
   description: string;
   requiredSkills: string[];
   compensation: string;
+  matchScore?: number;
 };
 
 export default function InternshipCard({ internship }: { internship: Internship }) {
@@ -28,6 +29,7 @@ export default function InternshipCard({ internship }: { internship: Internship 
         toast({
             title: "Already Tracked",
             description: "You are already tracking this internship application.",
+            variant: "default"
         });
         return;
     }
@@ -52,13 +54,19 @@ export default function InternshipCard({ internship }: { internship: Internship 
                 src={`https://picsum.photos/seed/${internship.companyName.replace(/\s/g, '')}/50/50`} 
                 alt={`${internship.companyName} logo`} 
                 width={50} height={50}
-                className="rounded-lg"
+                className="rounded-lg border"
                 data-ai-hint="logo abstract"
             />
-            <div>
+            <div className="flex-1">
                 <CardTitle className="font-headline text-lg">{internship.title}</CardTitle>
                 <CardDescription>{internship.companyName}</CardDescription>
             </div>
+             {internship.matchScore && (
+                <Badge variant={internship.matchScore > 80 ? 'default' : 'secondary'} className="flex gap-1 items-center">
+                    <TrendingUp className="h-3 w-3" />
+                    {internship.matchScore}%
+                </Badge>
+            )}
         </div>
       </CardHeader>
       <CardContent className="flex-grow space-y-4">
@@ -75,7 +83,7 @@ export default function InternshipCard({ internship }: { internship: Internship 
         </div>
         <div className="flex flex-wrap gap-2">
           {internship.requiredSkills.slice(0, 4).map((skill, index) => (
-            <Badge key={index} variant="secondary">
+            <Badge key={index} variant="outline">
               {skill}
             </Badge>
           ))}

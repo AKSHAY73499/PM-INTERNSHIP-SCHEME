@@ -1,43 +1,40 @@
 "use client";
 
 import { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, MapPin } from "lucide-react";
 import { matchInternships, MatchInternshipsOutput } from "@/ai/flows/internship-matching";
 import InternshipCard from "./internship-card";
 import { useToast } from "@/hooks/use-toast";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 
+// Add matchScore to the output schema
+type InternshipWithScore = MatchInternshipsOutput[number] & { matchScore?: number };
+
 const formSchema = z.object({
   skills: z.string().min(1, "Please enter at least one skill."),
   interests: z.string().min(1, "Please enter at least one interest."),
   location: z.string().min(1, "Please enter a location."),
-  prioritizeRural: z.boolean().default(false),
-  socialCategory: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 export default function InternshipMatcher() {
-  const [profile] = useLocalStorage('user-profile', { skills: '', interests: '', experience: '' });
-  const [internships, setInternships] = useState<MatchInternshipsOutput>([]);
+  const [profile] = useLocalStorage('user-profile', { skills: '', interests: '', locationPreference: '' });
+  const [internships, setInternships] = useState<InternshipWithScore[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -46,9 +43,7 @@ export default function InternshipMatcher() {
     defaultValues: {
       skills: profile.skills || "",
       interests: profile.interests || "",
-      location: "",
-      prioritizeRural: false,
-      socialCategory: "none",
+      location: profile.locationPreference || "",
     },
   });
 
@@ -59,20 +54,19 @@ export default function InternshipMatcher() {
       const skillsArray = data.skills.split(",").map((s) => s.trim());
       const interestsArray = data.interests.split(",").map((i) => i.trim());
 
-      const result = await matchInternships({
+      let result = await matchInternships({
         skills: skillsArray,
         interests: interestsArray,
         location: data.location,
       });
 
-      // Client-side filtering for fairness
-      let filteredResult = result;
-      if (data.prioritizeRural) {
-        // This is a placeholder for real rural area filtering logic
-        toast({ title: "Note", description: "Rural area prioritization is a demo feature." });
-      }
+      // Add a random match score for demonstration
+      const resultWithScores = result.map(internship => ({
+        ...internship,
+        matchScore: Math.floor(Math.random() * (98 - 70 + 1)) + 70, // Random score between 70-98
+      })).sort((a, b) => b.matchScore - a.matchScore); // Sort by score
       
-      setInternships(filteredResult);
+      setInternships(resultWithScores);
     } catch (error) {
       console.error("Failed to match internships:", error);
       toast({
@@ -118,6 +112,7 @@ export default function InternshipMatcher() {
       <Card>
         <CardHeader>
           <CardTitle className="font-headline">Internship Search</CardTitle>
+          <CardDescription>Use your profile data or enter new search criteria.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -132,9 +127,6 @@ export default function InternshipMatcher() {
                       <FormControl>
                         <Input placeholder="e.g., React, Python, Data Analysis" {...field} />
                       </FormControl>
-                      <FormDescription>
-                        Comma-separated skills from your profile.
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -148,9 +140,6 @@ export default function InternshipMatcher() {
                       <FormControl>
                         <Input placeholder="e.g., AI, Healthcare, Fintech" {...field} />
                       </FormControl>
-                      <FormDescription>
-                        Comma-separated interests.
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -174,55 +163,6 @@ export default function InternshipMatcher() {
                   </FormItem>
                 )}
               />
-              <div>
-                <h3 className="mb-4 text-lg font-medium font-headline">Fairness Filters</h3>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="socialCategory"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Social Category</FormLabel>
-                         <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a category" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="none">Prefer not to say</SelectItem>
-                              <SelectItem value="general">General</SelectItem>
-                              <SelectItem value="obc">OBC</SelectItem>
-                              <SelectItem value="sc">SC</SelectItem>
-                              <SelectItem value="st">ST</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        <FormDescription>Optional: To promote inclusive opportunities.</FormDescription>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="prioritizeRural"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Prioritize Rural Areas</FormLabel>
-                          <FormDescription>
-                            Show internships in non-metropolitan locations.
-                          </FormDescription>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
               <Button type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Find Internships

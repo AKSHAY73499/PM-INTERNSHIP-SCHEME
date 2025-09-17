@@ -13,6 +13,7 @@ import { skillGapAnalysis, SkillGapAnalysisOutput } from "@/ai/flows/skill-gap-a
 import { useToast } from "@/hooks/use-toast";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Separator } from "@/components/ui/separator";
+import Link from "next/link";
 
 const formSchema = z.object({
   studentSkills: z.string().min(1, "Please enter at least one skill."),
@@ -120,11 +121,11 @@ export default function SkillAnalyzer() {
                 <Lightbulb className="text-accent" />
                 Identified Skill Gaps
               </h3>
-              <ul className="mt-2 list-disc list-inside space-y-1">
+              <div className="mt-2 space-y-2">
                 {skillGapsList?.map((gap, index) => (
-                  <li key={`gap-${index}`}>{gap}</li>
+                   <div key={`gap-${index}`} className="p-3 bg-muted/50 rounded-md">You're missing <span className="font-semibold text-primary">{gap}</span>.</div>
                 ))}
-              </ul>
+              </div>
             </div>
             <Separator/>
             <div>
@@ -132,11 +133,14 @@ export default function SkillAnalyzer() {
                 <GraduationCap className="text-accent" />
                 Recommended Courses & Certifications
               </h3>
-              <ul className="mt-2 list-disc list-inside space-y-1">
+              <div className="mt-2 space-y-2">
                 {coursesList?.map((course, index) => (
-                  <li key={`course-${index}`}>{course}</li>
+                    <div key={`course-${index}`} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
+                        <span>{course}</span>
+                        <Button asChild variant="link"><Link href="#">Find Course</Link></Button>
+                    </div>
                 ))}
-              </ul>
+              </div>
             </div>
           </CardContent>
         </Card>
