@@ -1,20 +1,158 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+"use client";
+
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Download, Users, Building, Briefcase, Award } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from '@/components/ui/skeleton';
+
+type RegionStat = {
+  state: string;
+  students: number;
+  companies: number;
+  internships: number;
+};
+
+// Mock data simulating a backend fetch
+const mockRegionalData: RegionStat[] = [
+  { state: "Maharashtra", students: 1250, companies: 150, internships: 450 },
+  { state: "Karnataka", students: 1100, companies: 180, internships: 520 },
+  { state: "Delhi", students: 950, companies: 200, internships: 600 },
+  { state: "Tamil Nadu", students: 850, companies: 120, internships: 380 },
+  { state: "Uttar Pradesh", students: 1500, companies: 90, internships: 300 },
+  { state: "West Bengal", students: 700, companies: 80, internships: 250 },
+];
+
+const mockTotals = {
+    students: 15840,
+    companies: 1230,
+    internships: 4590,
+    placements: 1820
+}
 
 export default function AdminAnalyticsPage() {
+  const [regionalData, setRegionalData] = useState<RegionStat[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Simulate fetching data
+    const timer = setTimeout(() => {
+      setRegionalData(mockRegionalData);
+      setIsLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleDownload = (state: string) => {
+    toast({
+      title: "Report Download Started",
+      description: `Generating and downloading the report for ${state}.`,
+    });
+    // In a real app, this would trigger an API call to generate and download a file.
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold font-headline">Platform Analytics</h1>
         <p className="text-muted-foreground">
-          Download region-wise statistics and reports.
+          View key metrics and download region-wise statistics.
         </p>
       </div>
+
+       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {isLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-2xl font-bold">{mockTotals.students.toLocaleString()}</div>}
+            <p className="text-xs text-muted-foreground">Registered on the platform</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Companies</CardTitle>
+            <Building className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+             {isLoading ? <Skeleton className="h-8 w-20" /> : <div className="text-2xl font-bold">{mockTotals.companies.toLocaleString()}</div>}
+            <p className="text-xs text-muted-foreground">Offering internships</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Internships</CardTitle>
+            <Briefcase className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {isLoading ? <Skeleton className="h-8 w-20" /> : <div className="text-2xl font-bold">{mockTotals.internships.toLocaleString()}</div>}
+            <p className="text-xs text-muted-foreground">Currently available for students</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Successful Placements</CardTitle>
+            <Award className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {isLoading ? <Skeleton className="h-8 w-20" /> : <div className="text-2xl font-bold">{mockTotals.placements.toLocaleString()}</div>}
+            <p className="text-xs text-muted-foreground">Interns hired via platform</p>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
-          <CardTitle>Analytics & Reports</CardTitle>
+          <CardTitle>Region-wise Statistics</CardTitle>
+          <CardDescription>Breakdown of platform engagement across different states.</CardDescription>
         </CardHeader>
         <CardContent>
-          <p>Admin analytics and reporting tools will be available here.</p>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>State / Union Territory</TableHead>
+                        <TableHead className="text-right">Student Registrations</TableHead>
+                        <TableHead className="text-right">Company Sign-ups</TableHead>
+                        <TableHead className="text-right">Internships Posted</TableHead>
+                        <TableHead className="text-center">Action</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {isLoading ? (
+                        Array.from({length: 5}).map((_, i) => (
+                             <TableRow key={i}>
+                                <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                                <TableCell className="text-right"><Skeleton className="h-5 w-20 ml-auto" /></TableCell>
+                                <TableCell className="text-right"><Skeleton className="h-5 w-20 ml-auto" /></TableCell>
+                                <TableCell className="text-right"><Skeleton className="h-5 w-20 ml-auto" /></TableCell>
+                                <TableCell className="text-center"><Skeleton className="h-8 w-32 mx-auto" /></TableCell>
+                            </TableRow>
+                        ))
+                    ) : (
+                        regionalData.map((stat) => (
+                            <TableRow key={stat.state}>
+                                <TableCell className="font-medium">{stat.state}</TableCell>
+                                <TableCell className="text-right">{stat.students.toLocaleString()}</TableCell>
+                                <TableCell className="text-right">{stat.companies.toLocaleString()}</TableCell>
+                                <TableCell className="text-right">{stat.internships.toLocaleString()}</TableCell>
+                                <TableCell className="text-center">
+                                    <Button variant="outline" size="sm" onClick={() => handleDownload(stat.state)}>
+                                        <Download className="mr-2 h-4 w-4" />
+                                        Download Report
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))
+                    )}
+                </TableBody>
+            </Table>
         </CardContent>
       </Card>
     </div>
