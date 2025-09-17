@@ -22,7 +22,6 @@ export default function LoginPage() {
         <div className="w-full max-w-md mx-4">
             <div className="flex justify-center mb-6">
                  <Link href="/" className="flex items-center justify-center gap-2" prefetch={false}>
-                    <Image src="/moca-logo.png" alt="MoCA Logo" width={48} height={48} />
                     <Image src="https://iic.viit.ac.in/images/Hackathon/SIH-logo.png" alt="SIH Logo" width={48} height={48} />
                     <div className="ml-2">
                         <span className="text-2xl font-bold text-primary">AI for Internships</span>

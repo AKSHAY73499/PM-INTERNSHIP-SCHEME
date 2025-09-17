@@ -9,7 +9,6 @@ export default function Home() {
     <div className="flex flex-col min-h-screen bg-background">
       <header className="px-4 lg:px-6 h-20 flex items-center border-b bg-card">
         <Link href="#" className="flex items-center justify-center gap-2" prefetch={false}>
-          <Image src="/moca-logo.png" alt="MoCA Logo" width={40} height={40} />
           <Image src="https://iic.viit.ac.in/images/Hackathon/SIH-logo.png" alt="SIH Logo" width={40} height={40} />
           <div className="ml-2">
             <span className="text-xl font-bold text-primary">AI for Internships</span>
