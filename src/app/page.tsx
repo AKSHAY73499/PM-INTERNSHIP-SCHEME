@@ -1,3 +1,4 @@
+
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ export default function Home() {
           <Link className="text-sm font-medium hover:underline underline-offset-4" href="#eligibility">
             Eligibility
           </Link>
-          <Link className="text-sm font-medium hover:underline underline-offset-4" href="#contact">
+          <Link className="text_sm font-medium hover:underline underline-offset-4" href="#contact">
             Contact
           </Link>
           <Button asChild variant="outline">
@@ -83,9 +84,9 @@ export default function Home() {
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
-              <RoleCard icon={GraduationCap} title="Students" description="Create your profile, find AI-matched internships, and track your applications." href="/login?role=student" />
-              <RoleCard icon={Building} title="Companies" description="Post internships, get AI-shortlisted candidates, and manage your hiring pipeline." href="/login?role=company" />
-              <RoleCard icon={Briefcase} title="Institutes" description="Verify student credentials, monitor progress, and access institute-level analytics." href="/login?role=institute" />
+              <RoleCard icon={GraduationCap} title="Students" description="Create your profile, find AI-matched internships, and track your applications." href="/register?role=student" />
+              <RoleCard icon={Building} title="Companies" description="Post internships, get AI-shortlisted candidates, and manage your hiring pipeline." href="/register?role=company" />
+              <RoleCard icon={Briefcase} title="Institutes" description="Verify student credentials, monitor progress, and access institute-level analytics." href="/register?role=institute" />
               <RoleCard icon={Shield} title="Admins" description="Oversee the platform, ensure fairness, and generate national-level reports." href="/login?role=admin" />
             </div>
           </div>
