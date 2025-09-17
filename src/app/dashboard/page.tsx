@@ -130,15 +130,17 @@ export default function Dashboard() {
             <CardDescription>Helpful articles and guides for your internship journey.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-             <Link href="#" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted">
+             <Link href="/dashboard/resources" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted">
                 <BookOpen className="h-5 w-5 text-accent"/>
                 <span className="text-sm font-medium">Resume Building Guide</span>
             </Link>
-             <Link href="#" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted">
+             <Link href="/dashboard/resources" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted">
                 <Award className="h-5 w-5 text-accent"/>
                 <span className="text-sm font-medium">Interview Preparation Tips</span>
             </Link>
-             <Button variant="outline" className="mt-4">View All Resources</Button>
+             <Button variant="outline" className="mt-4" asChild>
+                <Link href="/dashboard/resources">View All Resources</Link>
+             </Button>
           </CardContent>
         </Card>
       </div>
