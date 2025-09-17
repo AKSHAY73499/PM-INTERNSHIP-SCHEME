@@ -8,13 +8,17 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function LoginPage() {
     const searchParams = useSearchParams();
     const role = searchParams.get('role') || 'student';
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="flex items-center justify-center min-h-screen bg-background relative">
+        <div className="absolute top-4 right-4">
+            <ThemeToggle />
+        </div>
         <div className="w-full max-w-md mx-4">
             <div className="flex justify-center mb-6">
                  <Link href="/" className="flex items-center justify-center gap-4" prefetch={false}>
