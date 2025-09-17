@@ -12,6 +12,7 @@ import {
   GraduationCap,
   BookOpen,
   CheckCircle,
+  BarChart,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -43,7 +44,7 @@ const adminLinks = [
     { href: "/dashboard/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/dashboard/admin/verification", label: "Verification Center", icon: CheckCircle },
     { href: "/dashboard/admin/reports", label: "Fairness Reports", icon: Shield },
-    { href: "/dashboard/admin/analytics", label: "Analytics", icon: Briefcase },
+    { href: "/dashboard/admin/analytics", label: "Analytics", icon: BarChart },
 ];
 
 // In a real app, you would get the user's role from auth state.
