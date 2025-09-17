@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useRef, useEffect, FormEvent } from "react";
-import { Bot, Mic, Send, X, Languages } from "lucide-react";
+import { Bot, Mic, Send, X, Languages, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from "@/components/ui/sheet";
 import { multilingualChatbot } from "@/ai/flows/multilingual-chatbot-support";
+import { textToSpeech } from "@/ai/flows/text-to-speech";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 type Message = {
   text: string;
   isUser: boolean;
+  audioUrl?: string;
 };
 
 export default function Chatbot() {
@@ -24,6 +26,7 @@ export default function Chatbot() {
   const [isListening, setIsListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -74,6 +77,13 @@ export default function Chatbot() {
     setIsListening(!isListening);
   };
 
+  const handlePlayAudio = (audioUrl: string) => {
+    if (audioRef.current) {
+        audioRef.current.src = audioUrl;
+        audioRef.current.play();
+    }
+  };
+
   const handleSend = async (e: FormEvent | Event, messageText: string = input) => {
     e.preventDefault();
     if (!messageText.trim() || isLoading) return;
@@ -85,7 +95,9 @@ export default function Chatbot() {
 
     try {
       const result = await multilingualChatbot({ language, message: messageText });
-      const botMessage: Message = { text: result.response, isUser: false };
+      const { audioUrl } = await textToSpeech({ text: result.response });
+
+      const botMessage: Message = { text: result.response, isUser: false, audioUrl };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
       console.error("Chatbot error:", error);
@@ -101,6 +113,7 @@ export default function Chatbot() {
 
   return (
     <>
+      <audio ref={audioRef} />
       <Button
         className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg"
         onClick={() => setIsOpen(true)}
@@ -149,6 +162,16 @@ export default function Chatbot() {
                     >
                       <p>{msg.text}</p>
                     </div>
+                     {!msg.isUser && msg.audioUrl && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handlePlayAudio(msg.audioUrl!)}
+                            className="text-muted-foreground"
+                        >
+                            <Volume2 className="h-5 w-5" />
+                        </Button>
+                     )}
                   </div>
                 ))}
                  {isLoading && (
