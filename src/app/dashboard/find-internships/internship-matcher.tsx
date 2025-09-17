@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -21,6 +21,7 @@ import { matchInternships, MatchInternshipsOutput } from "@/ai/flows/internship-
 import InternshipCard from "./internship-card";
 import { useToast } from "@/hooks/use-toast";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useSearchParams } from "next/navigation";
 
 // Add matchScore to the output schema
 type InternshipWithScore = MatchInternshipsOutput[number] & { matchScore?: number };
@@ -34,6 +35,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function InternshipMatcher() {
+  const searchParams = useSearchParams();
   const [profile] = useLocalStorage('user-profile', { skills: '', interests: '', locationPreference: '' });
   const [internships, setInternships] = useState<InternshipWithScore[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,11 +45,22 @@ export default function InternshipMatcher() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      skills: profile.skills || "",
-      interests: profile.interests || "",
-      location: profile.locationPreference || "",
+      skills: "",
+      interests: "",
+      location: "",
     },
   });
+
+  // Effect to populate form from localStorage
+  useEffect(() => {
+    if (profile.skills || profile.interests || profile.locationPreference) {
+      form.reset({
+        skills: profile.skills || "",
+        interests: profile.interests || "",
+        location: profile.locationPreference || "",
+      });
+    }
+  }, [profile, form]);
 
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
@@ -80,6 +93,21 @@ export default function InternshipMatcher() {
       setIsLoading(false);
     }
   };
+  
+  // Effect for auto-search
+  useEffect(() => {
+    const autoSearch = searchParams.get('autoSearch') === 'true';
+    const hasProfileData = profile.skills && profile.interests && profile.locationPreference;
+
+    if (autoSearch && hasProfileData && !isLoading) {
+        // We use form.getValues() to ensure we trigger the search with the data that's been set in the form
+        const formValues = form.getValues();
+        if(formValues.skills && formValues.interests && formValues.location) {
+             onSubmit(formValues);
+        }
+    }
+  }, [searchParams, profile, isLoading, form]);
+
 
   const handleGeoLocation = () => {
     if (navigator.geolocation) {
