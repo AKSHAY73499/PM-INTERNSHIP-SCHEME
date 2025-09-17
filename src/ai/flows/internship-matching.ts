@@ -1,15 +1,17 @@
 
 'use server';
+
 /**
- * @fileOverview A flow for matching students with internships based on their profile.
+ * @fileOverview A file containing the AI flow for matching internships to students.
  *
- * - matchInternships - A function that finds relevant internships.
- * - MatchInternshipsInput - The input type for the matchInternships function.
- * - MatchInternshipsOutput - The return type for the matchInternships function.
+ * - matchInternships: The main function to call to get internship matches.
+ * - MatchInternshipsInput: The Zod schema for the input of the matching function.
+ * - MatchInternshipsOutput: The Zod schema for the output of the matching function.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
+import { getInternships } from '@/services/internshipService';
 
 export const MatchInternshipsInputSchema = z.object({
   skills: z.array(z.string()).describe('The skills of the student.'),
@@ -18,61 +20,62 @@ export const MatchInternshipsInputSchema = z.object({
 });
 export type MatchInternshipsInput = z.infer<typeof MatchInternshipsInputSchema>;
 
-export const MatchInternshipsOutputSchema = z.array(
-  z.object({
-    companyName: z.string().describe('The name of the company.'),
-    title: z.string().describe('The title of the internship.'),
-    location: z.string().describe('The location of the internship.'),
-    description: z.string().describe('A brief description of the internship.'),
-    requiredSkills: z.array(z.string()).describe('A list of required skills for the internship.'),
-    compensation: z.string().describe('The compensation for the internship.'),
-  })
-);
-export type MatchInternshipsOutput = z.infer<typeof MatchInternshipsOutputSchema>;
-
-export async function matchInternships(
-  input: MatchInternshipsInput
-): Promise<MatchInternshipsOutput> {
-  return matchInternshipsFlow(input);
-}
-
-const prompt = ai.definePrompt({
-  name: 'internshipMatchingPrompt',
-  input: { schema: MatchInternshipsInputSchema },
-  output: { schema: MatchInternshipsOutputSchema },
-  prompt: `You are an AI matching engine for the PM Internship Scheme. Your primary goal is to find relevant internship opportunities for a student, but you MUST strictly adhere to the scheme's eligibility criteria.
-
-ONLY suggest internships that would be appropriate for a candidate who meets the following profile:
-
-**ELIGIBILITY CRITERIA (Candidate Profile):**
-- Indian citizen.
-- Age between 21–24 years.
-- Minimum qualification: Class 10 / ITI / Polytechnic / Diploma / Graduate degree.
-- Is NOT employed full-time or enrolled in a full-time academic programme.
-- Is NOT from a premier institute (IITs, IIMs, NIDs, IISERs, NITs, NLUs, etc.).
-- Does NOT hold higher/professional qualifications (MBA, PhD, CA, CS, MBBS, etc.).
-- Is NOT enrolled in other govt apprenticeship schemes (like NAPS, NATS).
-- Family income is NOT above ₹8 lakh/year.
-- Parents/spouse are NOT permanent govt/PSU employees.
-
-Based on these rules, analyze the student's profile below and provide a list of 5 diverse and relevant internship opportunities that a person meeting the above criteria would be eligible for.
-
-**Student's Profile for Matching:**
-- Skills: {{{skills}}}
-- Interests: {{{interests}}}
-- Preferred Location: {{{location}}}
-
-For each internship, include the company name, title, location, a brief description, required skills, and compensation. Ensure the internships are from a variety of sectors and company sizes. Do not suggest internships that would require qualifications the candidate is not allowed to have (e.g., an internship asking for an MBA).`,
+const InternshipSchema = z.object({
+    companyName: z.string(),
+    title: z.string(),
+    location: z.string(),
+    description: z.string(),
+    requiredSkills: z.array(z.string()),
+    compensation: z.string(),
 });
 
-const matchInternshipsFlow = ai.defineFlow(
+export const MatchInternshipsOutputSchema = z.array(InternshipSchema);
+export type MatchInternshipsOutput = z.infer<typeof MatchInternshipsOutputSchema>;
+
+
+const internshipMatchingPrompt = ai.definePrompt(
   {
-    name: 'matchInternshipsFlow',
+    name: 'internshipMatcher',
+    input: {
+        schema: z.object({
+            studentProfile: MatchInternshipsInputSchema,
+            internships: z.array(InternshipSchema)
+        })
+    },
+    output: { schema: MatchInternshipsOutputSchema },
+    prompt: `You are an expert career counselor. Your task is to match a student with relevant internships from a provided list based on their profile.
+
+Student Profile:
+- Skills: {{{studentProfile.skills}}}
+- Interests: {{{studentProfile.interests}}}
+- Location Preference: {{{studentProfile.location}}}
+
+Internship List:
+{{{json internships}}}
+
+Analyze the list and return a new list containing only the internships that are a good match for the student. Prioritize internships that align with the student's skills, interests, and location. Location matching can be flexible (e.g., "Remote" matches everything).`,
+  },
+);
+
+const internshipMatchingFlow = ai.defineFlow(
+  {
+    name: 'internshipMatchingFlow',
     inputSchema: MatchInternshipsInputSchema,
     outputSchema: MatchInternshipsOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
+  async (studentProfile) => {
+    const allInternships = await getInternships();
+
+    const { output } = await internshipMatchingPrompt({
+        studentProfile,
+        internships: allInternships,
+    });
+
+    return output || [];
   }
 );
+
+
+export async function matchInternships(input: MatchInternshipsInput): Promise<MatchInternshipsOutput> {
+    return await internshipMatchingFlow(input);
+}
