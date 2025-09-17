@@ -53,7 +53,27 @@ export default function AdminAnalyticsPage() {
       title: "Report Download Started",
       description: `Generating and downloading the report for ${state}.`,
     });
-    // In a real app, this would trigger an API call to generate and download a file.
+    
+    const selectedStateData = regionalData.find(stat => stat.state === state);
+    if (!selectedStateData) return;
+
+    const csvContent = [
+      "Category,Value",
+      `State,${selectedStateData.state}`,
+      `Student Registrations,${selectedStateData.students}`,
+      `Company Sign-ups,${selectedStateData.companies}`,
+      `Internships Posted,${selectedStateData.internships}`
+    ].join("\n");
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `report-${state.toLowerCase().replace(/\s/g, '-')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
