@@ -54,6 +54,26 @@ export default function SkillAnalyzer() {
     }
   };
 
+  const getCourseSearchUrl = (courseName: string): string => {
+    const platforms: { [key: string]: string } = {
+      udemy: 'https://www.udemy.com/courses/search/?q=',
+      coursera: 'https://www.coursera.org/search?query=',
+      pluralsight: 'https://www.pluralsight.com/search?q=',
+      edx: 'https://www.edx.org/search?q=',
+    };
+
+    const lowerCaseCourse = courseName.toLowerCase();
+    
+    for (const platform in platforms) {
+      if (lowerCaseCourse.includes(`(${platform})`)) {
+        const cleanCourseName = courseName.replace(new RegExp(`\\s*\\(${platform}\\)`, 'i'), '');
+        return `${platforms[platform]}${encodeURIComponent(cleanCourseName)}`;
+      }
+    }
+    
+    return `https://www.google.com/search?q=${encodeURIComponent(courseName + ' course')}`;
+  };
+
   const skillGapsList = analysis?.skillGaps.split(',').map(s => s.trim()).filter(s => s);
   const coursesList = analysis?.recommendedCourses.split(',').map(c => c.trim()).filter(c => c);
 
@@ -137,7 +157,7 @@ export default function SkillAnalyzer() {
                 {coursesList?.map((course, index) => (
                     <div key={`course-${index}`} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
                         <span>{course}</span>
-                        <Button asChild variant="link"><Link href="#">Find Course</Link></Button>
+                        <Button asChild variant="link"><Link href={getCourseSearchUrl(course)} target="_blank" rel="noopener noreferrer">Find Course</Link></Button>
                     </div>
                 ))}
               </div>
