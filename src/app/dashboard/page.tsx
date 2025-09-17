@@ -1,9 +1,33 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+
+"use client";
+
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Briefcase, Lightbulb, Search, Target, Award, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 
 export default function Dashboard() {
+  const [applications] = useLocalStorage('tracked-applications', []);
+  const [profile] = useLocalStorage('user-profile', {});
+  const [profileCompletion, setProfileCompletion] = useState(0);
+  const [applicationCount, setApplicationCount] = useState(0);
+
+  useEffect(() => {
+    // This will run on the client after hydration
+    const calculateProfileCompletion = () => {
+      if (!profile) return 0;
+      const fields = ['skills', 'qualifications', 'interests', 'experience', 'locationPreference'];
+      const filledFields = fields.filter(field => profile[field as keyof typeof profile] && profile[field as keyof typeof profile].trim() !== '');
+      return Math.round((filledFields.length / fields.length) * 100);
+    };
+
+    setProfileCompletion(calculateProfileCompletion());
+    setApplicationCount(applications.length);
+  }, [profile, applications]);
+
+
   return (
     <div className="flex flex-col gap-8">
       <header>
@@ -42,7 +66,7 @@ export default function Dashboard() {
               <Briefcase className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">3</div>
+              <div className="text-2xl font-bold">{applicationCount}</div>
               <p className="text-xs text-muted-foreground">Track their status now</p>
             </CardContent>
           </Card>
@@ -54,7 +78,7 @@ export default function Dashboard() {
               <Target className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">75%</div>
+              <div className="text-2xl font-bold">{profileCompletion}%</div>
               <p className="text-xs text-muted-foreground">Complete it for better matches</p>
             </CardContent>
           </Card>
