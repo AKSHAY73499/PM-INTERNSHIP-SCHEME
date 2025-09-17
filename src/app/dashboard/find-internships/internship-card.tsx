@@ -1,9 +1,10 @@
+
 "use client";
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Briefcase, MapPin, DollarSign, TrendingUp } from "lucide-react";
+import { Send, MapPin, DollarSign, TrendingUp } from "lucide-react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -22,13 +23,13 @@ export default function InternshipCard({ internship }: { internship: Internship 
   const { toast } = useToast();
   const [applications, setApplications] = useLocalStorage<any[]>('tracked-applications', []);
 
-  const handleTrackApplication = () => {
+  const handleApply = () => {
     const isAlreadyTracked = applications.some(app => app.title === internship.title && app.companyName === internship.companyName);
 
     if (isAlreadyTracked) {
         toast({
-            title: "Already Tracked",
-            description: "You are already tracking this internship application.",
+            title: "Already Applied",
+            description: "You have already applied for this internship.",
             variant: "default"
         });
         return;
@@ -36,13 +37,13 @@ export default function InternshipCard({ internship }: { internship: Internship 
 
     const newApplication = {
         ...internship,
-        status: 'Interested',
+        status: 'Applied',
         appliedDate: new Date().toISOString(),
     }
     setApplications([...applications, newApplication]);
     toast({
-      title: "Application Tracked",
-      description: `Started tracking "${internship.title}" at ${internship.companyName}.`,
+      title: "Application Submitted",
+      description: `Your application for "${internship.title}" has been sent to ${internship.companyName}. It is now pending company review.`,
     });
   };
 
@@ -90,8 +91,8 @@ export default function InternshipCard({ internship }: { internship: Internship 
         </div>
       </CardContent>
       <CardFooter>
-        <Button onClick={handleTrackApplication} className="w-full">
-          <Briefcase className="mr-2 h-4 w-4" /> Track Application
+        <Button onClick={handleApply} className="w-full">
+          <Send className="mr-2 h-4 w-4" /> Apply Now
         </Button>
       </CardFooter>
     </Card>

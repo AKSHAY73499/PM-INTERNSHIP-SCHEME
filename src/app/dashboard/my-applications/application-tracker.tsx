@@ -7,19 +7,22 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
-import { Briefcase, Calendar, CheckCircle, Clock, Send, XCircle, TrendingUp } from "lucide-react";
+import { Briefcase, Calendar, CheckCircle, Clock, Send, XCircle, TrendingUp, ShieldCheck } from "lucide-react";
+
+type ApplicationStatus = 'Interested' | 'Applied' | 'Pending Verification' | 'Interviewing' | 'Offer' | 'Rejected';
 
 type Application = {
   companyName: string;
   title: string;
   location: string;
-  status: 'Interested' | 'Applied' | 'Interviewing' | 'Offer' | 'Rejected';
+  status: ApplicationStatus;
   appliedDate: string;
 };
 
-const statusConfig: Record<Application['status'], { icon: React.ElementType; color: string, label: string }> = {
+const statusConfig: Record<ApplicationStatus, { icon: React.ElementType; color: string, label: string }> = {
     Interested: { icon: Clock, color: "text-sky-500", label: "Interested" },
     Applied: { icon: Send, color: "text-blue-500", label: "Applied" },
+    'Pending Verification': { icon: ShieldCheck, color: "text-orange-500", label: "Pending Verification"},
     Interviewing: { icon: TrendingUp, color: "text-yellow-500", label: "Interviewing" },
     Offer: { icon: CheckCircle, color: "text-green-500", label: "Offer" },
     Rejected: { icon: XCircle, color: "text-red-500", label: "Rejected" },
@@ -39,7 +42,7 @@ export default function ApplicationTracker() {
       <div className="text-center py-20 border-2 border-dashed rounded-lg">
          <Briefcase className="mx-auto h-12 w-12 text-muted-foreground" />
          <h3 className="mt-4 text-lg font-semibold">No Applications Tracked</h3>
-         <p className="mt-1 text-sm text-muted-foreground">Find internships and click "Track Application" to get started.</p>
+         <p className="mt-1 text-sm text-muted-foreground">Find internships and click "Apply" to get started.</p>
       </div>
     )
   }
@@ -57,7 +60,7 @@ export default function ApplicationTracker() {
             <TableRow>
               <TableHead>Position</TableHead>
               <TableHead className="hidden md:table-cell">Company</TableHead>
-              <TableHead className="hidden sm:table-cell">Date Tracked</TableHead>
+              <TableHead className="hidden sm:table-cell">Date Applied</TableHead>
               <TableHead className="text-right">Status</TableHead>
             </TableRow>
           </TableHeader>
@@ -79,7 +82,7 @@ export default function ApplicationTracker() {
                 </TableCell>
                 <TableCell className="text-right">
                   <Select value={app.status} onValueChange={(value: Application['status']) => handleStatusChange(index, value)}>
-                    <SelectTrigger className="w-[160px] ml-auto">
+                    <SelectTrigger className="w-[200px] ml-auto">
                         <SelectValue>
                            <div className="flex items-center gap-2">
                                {React.createElement(statusConfig[app.status].icon, { className: "h-4 w-4"})}
