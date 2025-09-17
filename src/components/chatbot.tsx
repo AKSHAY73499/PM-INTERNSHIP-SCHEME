@@ -119,12 +119,16 @@ export default function Chatbot() {
         });
       }
   
-    } catch (chatError) {
+    } catch (chatError: any) {
       console.error("Chatbot error:", chatError);
       const errorId = (Date.now() + 1).toString();
+      let errorText = "Sorry, I couldn't process that. Please try again.";
+      if (chatError?.message?.includes('503 Service Unavailable')) {
+        errorText = "The AI service is currently overloaded. Please try again in a few moments.";
+      }
       const errorMessage: Message = {
         id: errorId,
-        text: "Sorry, I couldn't process that. Please try again.",
+        text: errorText,
         isUser: false,
       };
       setMessages((prev) => [...prev, errorMessage]);
