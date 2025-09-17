@@ -71,7 +71,7 @@ function LoginTabContent({ value, title }: { value: string, title: string }) {
                 </Button>
                 <div className="mt-4 text-center text-sm">
                     Don't have an account?{" "}
-                    <Link href="#" className="underline">
+                    <Link href="/register" className="underline">
                         Register
                     </Link>
                 </div>
