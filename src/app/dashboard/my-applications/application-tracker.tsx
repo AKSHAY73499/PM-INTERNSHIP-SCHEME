@@ -1,24 +1,33 @@
 "use client";
 
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { Briefcase, Building, Calendar, MapPin, CheckCircle, Clock, Send, XCircle, TrendingUp } from "lucide-react";
 
 type Application = {
   companyName: string;
   title: string;
   location: string;
-  status: string;
+  status: 'Interested' | 'Applied' | 'Interviewing' | 'Offer' | 'Rejected';
   appliedDate: string;
 };
+
+const statusConfig = {
+    Interested: { icon: Clock, color: "text-sky-500 border-sky-500", label: "Interested" },
+    Applied: { icon: Send, color: "text-blue-500 border-blue-500", label: "Applied" },
+    Interviewing: { icon: TrendingUp, color: "text-yellow-500 border-yellow-500", label: "Interviewing" },
+    Offer: { icon: CheckCircle, color: "text-green-500 border-green-500", label: "Offer" },
+    Rejected: { icon: XCircle, color: "text-red-500 border-red-500", label: "Rejected" },
+}
 
 export default function ApplicationTracker() {
   const [applications, setApplications] = useLocalStorage<Application[]>('tracked-applications', []);
 
-  const handleStatusChange = (index: number, newStatus: string) => {
+  const handleStatusChange = (index: number, newStatus: Application['status']) => {
     const updatedApplications = [...applications];
     updatedApplications[index].status = newStatus;
     setApplications(updatedApplications);
@@ -27,8 +36,9 @@ export default function ApplicationTracker() {
   if (applications.length === 0) {
     return (
       <div className="text-center py-20 border-2 border-dashed rounded-lg">
-         <p className="text-muted-foreground">You haven't tracked any applications yet.</p>
-         <p className="text-sm text-muted-foreground">Find internships and click "Track Application" to get started.</p>
+         <Briefcase className="mx-auto h-12 w-12 text-muted-foreground" />
+         <h3 className="mt-4 text-lg font-semibold">No Applications Tracked</h3>
+         <p className="mt-1 text-sm text-muted-foreground">Find internships and click "Track Application" to get started.</p>
       </div>
     )
   }
@@ -37,36 +47,54 @@ export default function ApplicationTracker() {
     <Card>
       <CardHeader>
         <CardTitle className="font-headline">Your Tracked Applications</CardTitle>
+        <CardDescription>Manage and monitor all your internship applications in one place.</CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="border rounded-lg">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Position</TableHead>
-              <TableHead>Company</TableHead>
-              <TableHead className="hidden md:table-cell">Location</TableHead>
+              <TableHead className="hidden md:table-cell">Company</TableHead>
               <TableHead className="hidden sm:table-cell">Date Tracked</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {applications.map((app, index) => (
               <TableRow key={index}>
-                <TableCell className="font-medium">{app.title}</TableCell>
-                <TableCell>{app.companyName}</TableCell>
-                <TableCell className="hidden md:table-cell">{app.location}</TableCell>
-                <TableCell className="hidden sm:table-cell">{format(new Date(app.appliedDate), "PPP")}</TableCell>
-                <TableCell>
-                  <Select value={app.status} onValueChange={(value) => handleStatusChange(index, value)}>
-                    <SelectTrigger className="w-[150px]">
-                      <SelectValue placeholder="Set status" />
+                <TableCell className="font-medium">
+                    <div className="flex flex-col">
+                        <span>{app.title}</span>
+                        <span className="text-sm text-muted-foreground md:hidden">{app.companyName}</span>
+                    </div>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">{app.companyName}</TableCell>
+                <TableCell className="hidden sm:table-cell">
+                    <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        {format(new Date(app.appliedDate), "PPP")}
+                    </div>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Select value={app.status} onValueChange={(value: Application['status']) => handleStatusChange(index, value)}>
+                    <SelectTrigger className="w-[160px] ml-auto">
+                        <SelectValue>
+                           <div className="flex items-center gap-2">
+                               {React.createElement(statusConfig[app.status].icon, { className: "h-4 w-4"})}
+                               <span>{statusConfig[app.status].label}</span>
+                           </div>
+                        </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Interested"><Badge variant="outline" className="text-sky-500 border-sky-500">Interested</Badge></SelectItem>
-                      <SelectItem value="Applied"><Badge variant="outline" className="text-blue-500 border-blue-500">Applied</Badge></SelectItem>
-                      <SelectItem value="Interviewing"><Badge variant="outline" className="text-yellow-500 border-yellow-500">Interviewing</Badge></SelectItem>
-                      <SelectItem value="Offer"><Badge variant="outline" className="text-green-500 border-green-500">Offer</Badge></SelectItem>
-                      <SelectItem value="Rejected"><Badge variant="destructive">Rejected</Badge></SelectItem>
+                        {Object.entries(statusConfig).map(([key, config]) => (
+                            <SelectItem key={key} value={key}>
+                                 <div className="flex items-center gap-3">
+                                    {React.createElement(config.icon, { className: `h-4 w-4 ${config.color.split(' ')[0]}`})}
+                                    <span>{config.label}</span>
+                                </div>
+                            </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </TableCell>
@@ -74,6 +102,7 @@ export default function ApplicationTracker() {
             ))}
           </TableBody>
         </Table>
+        </div>
       </CardContent>
     </Card>
   );
