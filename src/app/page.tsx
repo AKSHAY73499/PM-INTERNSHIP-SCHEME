@@ -100,7 +100,7 @@ export default function Home() {
             </p>
             <div className="text-center mt-6">
               <Button variant="secondary" asChild>
-                <Link href="/dashboard/resources">Read Guidelines <BookOpen className="ml-2 h-4 w-4" /></Link>
+                <Link href="/dashboard/guidelines">Read Guidelines <BookOpen className="ml-2 h-4 w-4" /></Link>
               </Button>
             </div>
           </div>

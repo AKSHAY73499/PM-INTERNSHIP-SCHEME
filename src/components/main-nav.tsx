@@ -13,6 +13,7 @@ import {
   BookOpen,
   CheckCircle,
   BarChart,
+  FileText,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -25,6 +26,7 @@ const studentLinks = [
   { href: "/dashboard/skill-analysis", label: "Skill Analysis", icon: Lightbulb },
   { href: "/dashboard/my-applications", label: "My Applications", icon: Briefcase },
   { href: "/dashboard/my-profile", label: "My Profile", icon: UserCircle },
+  { href: "/dashboard/guidelines", label: "Guidelines", icon: FileText },
   { href: "/dashboard/resources", label: "Resources", icon: BookOpen },
 ];
 
