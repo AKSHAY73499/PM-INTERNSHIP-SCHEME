@@ -1,3 +1,47 @@
+
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-image",
+      "description": "Abstract image for the hero section",
+      "imageUrl": "https://picsum.photos/seed/compass/1200/800",
+      "imageHint": "abstract geometric"
+    },
+    {
+      "id": "avatar-placeholder",
+      "description": "Placeholder for user avatar",
+      "imageUrl": "https://picsum.photos/seed/avatar1/100/100",
+      "imageHint": "avatar person"
+    },
+    {
+      "id": "company-logo-1",
+      "description": "Placeholder for company logo 1",
+      "imageUrl": "https://picsum.photos/seed/clogo1/50/50",
+      "imageHint": "logo abstract"
+    },
+    {
+      "id": "company-logo-2",
+      "description": "Placeholder for company logo 2",
+      "imageUrl": "https://picsum.photos/seed/clogo2/50/50",
+      "imageHint": "logo geometric"
+    },
+    {
+      "id": "company-logo-3",
+      "description": "Placeholder for company logo 3",
+      "imageUrl": "https://picsum.photos/seed/clogo3/50/50",
+      "imageHint": "logo modern"
+    },
+    {
+      "id": "company-logo-4",
+      "description": "Placeholder for company logo 4",
+      "imageUrl": "https://picsum.photos/seed/clogo4/50/50",
+      "imageHint": "logo simple"
+    },
+    {
+      "id": "company-logo-5",
+      "description": "Placeholder for company logo 5",
+      "imageUrl": "https://picsum.photos/seed/clogo5/50/50",
+      "imageHint": "logo corporate"
+    }
+  ]
 }

@@ -1,0 +1,91 @@
+"use client";
+
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Briefcase, MapPin, DollarSign } from "lucide-react";
+import Image from "next/image";
+import { useToast } from "@/components/ui/use-toast";
+import { useLocalStorage } from "@/hooks/use-local-storage";
+
+type Internship = {
+  companyName: string;
+  title: string;
+  location: string;
+  description: string;
+  requiredSkills: string[];
+  compensation: string;
+};
+
+export default function InternshipCard({ internship }: { internship: Internship }) {
+  const { toast } = useToast();
+  const [applications, setApplications] = useLocalStorage<any[]>('tracked-applications', []);
+
+  const handleTrackApplication = () => {
+    const isAlreadyTracked = applications.some(app => app.title === internship.title && app.companyName === internship.companyName);
+
+    if (isAlreadyTracked) {
+        toast({
+            title: "Already Tracked",
+            description: "You are already tracking this internship application.",
+        });
+        return;
+    }
+
+    const newApplication = {
+        ...internship,
+        status: 'Interested',
+        appliedDate: new Date().toISOString(),
+    }
+    setApplications([...applications, newApplication]);
+    toast({
+      title: "Application Tracked",
+      description: `Started tracking "${internship.title}" at ${internship.companyName}.`,
+    });
+  };
+
+  return (
+    <Card className="flex flex-col">
+      <CardHeader>
+        <div className="flex items-start gap-4">
+            <Image 
+                src={`https://picsum.photos/seed/${internship.companyName.replace(/\s/g, '')}/50/50`} 
+                alt={`${internship.companyName} logo`} 
+                width={50} height={50}
+                className="rounded-lg"
+                data-ai-hint="logo abstract"
+            />
+            <div>
+                <CardTitle className="font-headline text-lg">{internship.title}</CardTitle>
+                <CardDescription>{internship.companyName}</CardDescription>
+            </div>
+        </div>
+      </CardHeader>
+      <CardContent className="flex-grow space-y-4">
+        <p className="text-sm text-muted-foreground">{internship.description}</p>
+        <div className="space-y-2 text-sm">
+            <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <span>{internship.location}</span>
+            </div>
+            <div className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <span>{internship.compensation}</span>
+            </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {internship.requiredSkills.slice(0, 4).map((skill, index) => (
+            <Badge key={index} variant="secondary">
+              {skill}
+            </Badge>
+          ))}
+        </div>
+      </CardContent>
+      <CardFooter>
+        <Button onClick={handleTrackApplication} className="w-full">
+          <Briefcase className="mr-2 h-4 w-4" /> Track Application
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
