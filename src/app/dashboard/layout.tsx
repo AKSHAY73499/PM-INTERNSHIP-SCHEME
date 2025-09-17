@@ -16,8 +16,9 @@ export default function DashboardLayout({
       <aside className="fixed inset-y-0 left-0 z-10 hidden w-64 flex-col border-r bg-background sm:flex">
         <div className="flex h-[60px] items-center border-b px-6">
            <div className="flex items-center gap-2">
-              <Image src="/moca-logo.png" alt="MoCA Logo" width={36} height={36} />
-              <span className="text-lg font-bold">
+              <Image src="/moca-logo.png" alt="MoCA Logo" width={32} height={32} />
+              <Image src="https://iic.viit.ac.in/images/Hackathon/SIH-logo.png" alt="SIH Logo" width={32} height={32} />
+              <span className="font-bold">
                 AI for Internships
               </span>
             </div>
@@ -38,8 +39,9 @@ export default function DashboardLayout({
             <SheetContent side="left" className="sm:max-w-xs p-0">
                <div className="flex h-[60px] items-center border-b px-6">
                   <div className="flex items-center gap-2">
-                    <Image src="/moca-logo.png" alt="MoCA Logo" width={36} height={36} />
-                    <span className="text-lg font-bold">
+                    <Image src="/moca-logo.png" alt="MoCA Logo" width={32} height={32} />
+                    <Image src="https://iic.viit.ac.in/images/Hackathon/SIH-logo.png" alt="SIH Logo" width={32} height={32} />
+                    <span className="font-bold">
                       AI for Internships
                     </span>
                   </div>
