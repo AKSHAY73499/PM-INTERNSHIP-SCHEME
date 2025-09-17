@@ -61,12 +61,16 @@ export default function CompanyApplicationsPage() {
 
       setShortlist(result);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to shortlist candidates:", error);
+      let description = "There was an error processing the candidate list. Please try again.";
+      if (error?.message?.includes('503 Service Unavailable')) {
+          description = "The AI service is currently overloaded. Please try again in a few moments.";
+      }
        toast({
         variant: "destructive",
         title: "AI Shortlisting Failed",
-        description: "There was an error processing the candidate list. Please try again.",
+        description: description,
       });
     } finally {
       setIsLoading(false);
