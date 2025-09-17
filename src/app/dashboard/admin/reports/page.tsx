@@ -73,7 +73,7 @@ export default function AdminReportsPage() {
                         <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}
                 </Pie>
-                <Tooltip contentStyle={{backgroundColor: 'hsl(var(--background))'}}/>
+                <Tooltip cursor={{fill: 'hsl(var(--muted))'}} contentStyle={{backgroundColor: 'hsl(var(--background))', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))'}}/>
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
@@ -92,7 +92,7 @@ export default function AdminReportsPage() {
                         <BarChart data={socialCategoryData}>
                             <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                             <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                            <Tooltip cursor={{fill: 'hsl(var(--muted))'}} contentStyle={{backgroundColor: 'hsl(var(--background))'}}/>
+                            <Tooltip cursor={{fill: 'hsl(var(--muted))'}} contentStyle={{backgroundColor: 'hsl(var(--background))', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))'}}/>
                             <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                         </BarChart>
                     </ResponsiveContainer>
@@ -111,7 +111,7 @@ export default function AdminReportsPage() {
                                     <Cell key={`cell-${index}`} fill={entry.fill} />
                                 ))}
                             </Pie>
-                            <Tooltip contentStyle={{backgroundColor: 'hsl(var(--background))'}}/>
+                            <Tooltip cursor={{fill: 'hsl(var(--muted))'}} contentStyle={{backgroundColor: 'hsl(var(--background))', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))'}}/>
                         </PieChart>
                     </ResponsiveContainer>
                 </CardContent>
