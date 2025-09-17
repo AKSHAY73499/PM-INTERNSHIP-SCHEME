@@ -4,7 +4,7 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Send, MapPin, DollarSign, TrendingUp } from "lucide-react";
+import { Send, MapPin, DollarSign, TrendingUp, Bookmark } from "lucide-react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -19,32 +19,46 @@ type Internship = {
   matchScore?: number;
 };
 
+const APPLY_THRESHOLD = 70;
+
 export default function InternshipCard({ internship }: { internship: Internship }) {
   const { toast } = useToast();
   const [applications, setApplications] = useLocalStorage<any[]>('tracked-applications', []);
+  
+  const canApply = internship.matchScore && internship.matchScore >= APPLY_THRESHOLD;
 
-  const handleApply = () => {
+  const handleApplication = () => {
     const isAlreadyTracked = applications.some(app => app.title === internship.title && app.companyName === internship.companyName);
 
     if (isAlreadyTracked) {
         toast({
-            title: "Already Applied",
-            description: "You have already applied for this internship.",
+            title: "Already Tracked",
+            description: "You are already tracking or have applied for this internship.",
             variant: "default"
         });
         return;
     }
+    
+    const newStatus = canApply ? 'Applied' : 'Interested';
 
     const newApplication = {
         ...internship,
-        status: 'Applied',
+        status: newStatus,
         appliedDate: new Date().toISOString(),
     }
     setApplications([...applications, newApplication]);
-    toast({
-      title: "Application Submitted",
-      description: `Your application for "${internship.title}" has been sent to ${internship.companyName}. It is now pending company review.`,
-    });
+    
+    if(canApply) {
+        toast({
+          title: "Application Submitted",
+          description: `Your application for "${internship.title}" has been sent to ${internship.companyName}. It is now pending company review.`,
+        });
+    } else {
+        toast({
+          title: "Internship Tracked",
+          description: `"${internship.title}" has been added to your tracked applications with 'Interested' status.`,
+        });
+    }
   };
 
   return (
@@ -91,8 +105,16 @@ export default function InternshipCard({ internship }: { internship: Internship 
         </div>
       </CardContent>
       <CardFooter>
-        <Button onClick={handleApply} className="w-full">
-          <Send className="mr-2 h-4 w-4" /> Apply Now
+        <Button onClick={handleApplication} className="w-full">
+          {canApply ? (
+            <>
+              <Send className="mr-2 h-4 w-4" /> Apply Now
+            </>
+          ) : (
+             <>
+              <Bookmark className="mr-2 h-4 w-4" /> Track Application
+            </>
+          )}
         </Button>
       </CardFooter>
     </Card>
