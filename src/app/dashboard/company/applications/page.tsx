@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, User, GraduationCap, Briefcase } from "lucide-react";
 import { shortlistCandidates, ShortlistCandidatesOutput } from "@/ai/flows/candidate-shortlisting";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 // Mock Data
 const mockInternships = [
@@ -147,7 +149,50 @@ export default function CompanyApplicationsPage() {
                                 </TableCell>
                                 <TableCell className="text-sm text-muted-foreground max-w-sm">{candidate.reasoning}</TableCell>
                                 <TableCell className="text-right">
-                                    <Button>View Profile</Button>
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button>View Profile</Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-md">
+                                            <DialogHeader>
+                                                <div className="flex items-center gap-4">
+                                                    <Avatar className="h-16 w-16">
+                                                        <AvatarImage src={`https://api.dicebear.com/8.x/initials/svg?seed=${candidate.name}`} alt={candidate.name} />
+                                                        <AvatarFallback>{candidate.name.substring(0, 2)}</AvatarFallback>
+                                                    </Avatar>
+                                                    <div>
+                                                        <DialogTitle className="text-2xl font-bold font-headline">{candidate.name}</DialogTitle>
+                                                        <DialogDescription>AI Match Score: {candidate.matchScore}%</DialogDescription>
+                                                    </div>
+                                                </div>
+                                            </DialogHeader>
+                                            <div className="py-4 space-y-6">
+                                                <div className="space-y-2">
+                                                    <h4 className="font-semibold flex items-center gap-2"><GraduationCap className="h-4 w-4 text-muted-foreground" /> Qualifications</h4>
+                                                    <p className="text-muted-foreground">{candidate.qualifications}</p>
+                                                </div>
+                                                 <div className="space-y-2">
+                                                    <h4 className="font-semibold flex items-center gap-2"><Briefcase className="h-4 w-4 text-muted-foreground" /> Experience</h4>
+                                                    <p className="text-muted-foreground">{candidate.experience || 'N/A'}</p>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <h4 className="font-semibold">Skills</h4>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {candidate.skills.map(skill => (
+                                                            <Badge key={skill} variant="secondary">{skill}</Badge>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <h4 className="font-semibold">AI Reasoning</h4>
+                                                    <p className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-md">{candidate.reasoning}</p>
+                                                </div>
+                                            </div>
+                                             <DialogClose asChild>
+                                                <Button type="button" variant="secondary">Close</Button>
+                                             </DialogClose>
+                                        </DialogContent>
+                                    </Dialog>
                                 </TableCell>
                             </TableRow>
                         ))}

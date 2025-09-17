@@ -28,7 +28,7 @@ const ShortlistCandidatesInputSchema = z.object({
   internship: InternshipDetailsSchema,
   students: z.array(StudentProfileSchema).describe("A list of student profiles to evaluate."),
 });
-type ShortlistCandidatesInput = z.infer<typeof ShortlistCandidatesInputSchema>;
+export type ShortlistCandidatesInput = z.infer<typeof ShortlistCandidatesInputSchema>;
 
 
 const ShortlistedCandidateSchema = z.object({
@@ -36,6 +36,8 @@ const ShortlistedCandidateSchema = z.object({
     matchScore: z.number().min(0).max(100).describe("The AI-calculated match score percentage (0-100)."),
     reasoning: z.string().describe("A brief explanation for why the candidate is a good match."),
     skills: z.array(z.string()).describe("The student's skills."),
+    qualifications: z.string().describe("The student's qualifications."),
+    experience: z.string().optional().describe("A summary of the student's experience."),
 });
 
 const ShortlistCandidatesOutputSchema = z.array(ShortlistedCandidateSchema).describe("A sorted list of shortlisted candidates, from highest to lowest match score.");
@@ -61,7 +63,7 @@ const prompt = ai.definePrompt({
 
   Analyze each student's profile against the internship requirements. Calculate a "matchScore" from 0 to 100 based on how well their skills, qualifications, and experience align with the role. Provide a brief "reasoning" for your score.
 
-  Return a JSON array of the shortlisted candidates, sorted in descending order by their matchScore. Include the student's name, skills, the calculated matchScore, and your reasoning.
+  Return a JSON array of the shortlisted candidates, sorted in descending order by their matchScore. For each candidate, include their name, skills, qualifications, experience, the calculated matchScore, and your reasoning.
   `,
 });
 
