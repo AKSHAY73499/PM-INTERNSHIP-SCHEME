@@ -1,36 +1,58 @@
 
 "use client";
 
+import { useState, useEffect } from "react";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Pie, PieChart, Cell, Legend } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
-// Mock Data for Charts
-const geoDiversityData = [
-  { name: 'Tier 1 Cities', value: 450, fill: 'hsl(var(--chart-1))' },
-  { name: 'Tier 2 Cities', value: 300, fill: 'hsl(var(--chart-2))' },
-  { name: 'Rural Areas', value: 250, fill: 'hsl(var(--chart-3))' },
-];
-
-const genderData = [
-    { name: 'Male', value: 600, fill: 'hsl(var(--chart-1))' },
-    { name: 'Female', value: 380, fill: 'hsl(var(--chart-2))' },
-    { name: 'Other', value: 20, fill: 'hsl(var(--chart-4))'},
-];
-
-const socialCategoryData = [
-  { name: 'General', value: 400 },
-  { name: 'OBC', value: 270 },
-  { name: 'SC', value: 150 },
-  { name: 'ST', value: 80 },
-  { name: 'EWS', value: 100 },
-];
+import { getFairnessReportData, FairnessReportData } from "@/ai/flows/fairness-reports";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
 
 export default function AdminReportsPage() {
+  const [reportData, setReportData] = useState<FairnessReportData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getFairnessReportData();
+        setReportData(data);
+      } catch (error) {
+        console.error("Failed to fetch fairness reports:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not load real-time fairness data. Displaying sample data instead.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, [toast]);
+
+
+  const renderPieChart = (data: any[], height = 250, innerRadius = 0) => (
+     <ResponsiveContainer width="100%" height={height}>
+      <PieChart>
+        <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} innerRadius={innerRadius} label>
+            {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.fill} />
+            ))}
+        </Pie>
+        <Tooltip cursor={{fill: 'hsl(var(--muted))'}} contentStyle={{backgroundColor: 'hsl(var(--background))', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))'}}/>
+        <Legend />
+      </PieChart>
+    </ResponsiveContainer>
+  );
+
   return (
     <div className="space-y-6">
       <div>
@@ -66,17 +88,7 @@ export default function AdminReportsPage() {
             <CardDescription>Distribution of applicants by location type.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie data={geoDiversityData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
-                    {geoDiversityData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                </Pie>
-                <Tooltip cursor={{fill: 'hsl(var(--muted))'}} contentStyle={{backgroundColor: 'hsl(var(--background))', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))'}}/>
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+            {isLoading ? <Skeleton className="h-[250px] w-full" /> : reportData && renderPieChart(reportData.geoDiversity)}
           </CardContent>
         </Card>
       </div>
@@ -88,14 +100,16 @@ export default function AdminReportsPage() {
                     <CardDescription>Applicant breakdown by social category.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                     <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={socialCategoryData}>
-                            <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                            <Tooltip cursor={{fill: 'hsl(var(--muted))'}} contentStyle={{backgroundColor: 'hsl(var(--background))', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))'}}/>
-                            <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                    </ResponsiveContainer>
+                    {isLoading ? <Skeleton className="h-[300px] w-full" /> : reportData && (
+                         <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={reportData.socialCategory}>
+                                <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                                <Tooltip cursor={{fill: 'hsl(var(--muted))'}} contentStyle={{backgroundColor: 'hsl(var(--background))', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))'}}/>
+                                <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    )}
                 </CardContent>
             </Card>
             <Card className="lg:col-span-2">
@@ -104,16 +118,7 @@ export default function AdminReportsPage() {
                     <CardDescription>Gender diversity across all applications.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                     <ResponsiveContainer width="100%" height={300}>
-                        <PieChart>
-                            <Pie data={genderData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} label>
-                               {genderData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                                ))}
-                            </Pie>
-                            <Tooltip cursor={{fill: 'hsl(var(--muted))'}} contentStyle={{backgroundColor: 'hsl(var(--background))', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))'}}/>
-                        </PieChart>
-                    </ResponsiveContainer>
+                     {isLoading ? <Skeleton className="h-[300px] w-full" /> : reportData && renderPieChart(reportData.genderDiversity, 300, 60)}
                 </CardContent>
             </Card>
         </div>
