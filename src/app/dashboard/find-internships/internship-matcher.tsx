@@ -82,12 +82,16 @@ export default function InternshipMatcher() {
       })).sort((a, b) => b.matchScore - a.matchScore); // Sort by score
       
       setInternships(resultWithScores);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to match internships:", error);
+      let description = "Could not fetch internship matches. Please try again.";
+      if (error?.message?.includes('503 Service Unavailable')) {
+          description = "The AI service is currently overloaded. Please try again in a few moments.";
+      }
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Could not fetch internship matches. Please try again.",
+        description: description,
       });
     } finally {
       setIsLoading(false);
