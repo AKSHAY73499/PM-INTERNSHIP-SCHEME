@@ -11,6 +11,7 @@ import {
   Building,
   GraduationCap,
   BookOpen,
+  CheckCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -40,6 +41,7 @@ const instituteLinks = [
 
 const adminLinks = [
     { href: "/dashboard/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/dashboard/admin/verification", label: "Verification Center", icon: CheckCircle },
     { href: "/dashboard/admin/reports", label: "Fairness Reports", icon: Shield },
     { href: "/dashboard/admin/analytics", label: "Analytics", icon: Briefcase },
 ];
