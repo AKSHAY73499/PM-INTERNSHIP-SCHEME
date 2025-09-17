@@ -24,11 +24,11 @@ const InternshipDetailsSchema = z.object({
   requiredSkills: z.array(z.string()).describe("A list of skills required for the internship."),
 });
 
-export const ShortlistCandidatesInputSchema = z.object({
+const ShortlistCandidatesInputSchema = z.object({
   internship: InternshipDetailsSchema,
   students: z.array(StudentProfileSchema).describe("A list of student profiles to evaluate."),
 });
-export type ShortlistCandidatesInput = z.infer<typeof ShortlistCandidatesInputSchema>;
+type ShortlistCandidatesInput = z.infer<typeof ShortlistCandidatesInputSchema>;
 
 
 const ShortlistedCandidateSchema = z.object({
@@ -38,7 +38,7 @@ const ShortlistedCandidateSchema = z.object({
     skills: z.array(z.string()).describe("The student's skills."),
 });
 
-export const ShortlistCandidatesOutputSchema = z.array(ShortlistedCandidateSchema).describe("A sorted list of shortlisted candidates, from highest to lowest match score.");
+const ShortlistCandidatesOutputSchema = z.array(ShortlistedCandidateSchema).describe("A sorted list of shortlisted candidates, from highest to lowest match score.");
 export type ShortlistCandidatesOutput = z.infer<typeof ShortlistCandidatesOutputSchema>;
 
 export async function shortlistCandidates(input: ShortlistCandidatesInput): Promise<ShortlistCandidatesOutput> {
