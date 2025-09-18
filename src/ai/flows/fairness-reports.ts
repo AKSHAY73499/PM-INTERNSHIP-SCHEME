@@ -1,40 +1,19 @@
-
 'use server';
 /**
- * @fileOverview A Genkit flow that generates a fairness report for the platform.
+ * @fileOverview A fairness report generation AI agent.
  *
- * - getFairnessReportData - A function that returns fairness report data.
- * - FairnessReportData - The type for the fairness report data.
+ * - getFairnessReportData - A function that generates fairness report data.
+ * - FairnessReportData - The return type for the getFairnessReportData function.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import { FairnessReportDataSchema, FairnessReportData } from '@/ai/schema-and-types';
+import { getCompanyStudents, getCompanyInternships } from '@/services/companyService'; // Using company service to get a wide array of students
 
-const ReportDataItemSchema = z.object({
-    name: z.string(),
-    value: z.number(),
-    fill: z.string().describe('A hex color code for the chart fill, e.g., #FF5733'),
-});
-
-const FairnessReportDataSchema = z.object({
-    geoDiversity: z.array(ReportDataItemSchema).describe('Geographical diversity data.'),
-    socialCategory: z.array(ReportDataItemSchema).describe('Social category distribution data.'),
-    genderDiversity: z.array(ReportDataItemSchema).describe('Gender diversity data.'),
-});
-export type FairnessReportData = z.infer<typeof FairnessReportDataSchema>;
-
-const prompt = ai.definePrompt({
-    name: 'fairnessReportPrompt',
-    output: { schema: FairnessReportDataSchema },
-    prompt: `Generate a sample fairness report for an internship platform. The report should include data for:
-1. Geographical Diversity: Applicants from Tier 1, Tier 2, and Rural areas.
-2. Social Category Distribution: Applicants from categories like General, OBC, SC, ST.
-3. Gender Diversity: Male, Female, and Other.
-
-For each data point, provide a name, a realistic value (number of applicants), and an appropriate hex color code for chart visualization.
-Example for one item in geoDiversity: { name: 'Tier 1 Cities', value: 450, fill: '#0088FE' }
-`,
-});
+export async function getFairnessReportData(): Promise<FairnessReportData> {
+  return fairnessReportFlow();
+}
 
 const fairnessReportFlow = ai.defineFlow(
   {
@@ -42,18 +21,43 @@ const fairnessReportFlow = ai.defineFlow(
     outputSchema: FairnessReportDataSchema,
   },
   async () => {
-    const { output } = await ai.generate({
-        model: 'googleai/gemini-1.5-flash',
-        prompt: await prompt.render(),
-    });
+    // In a real-world scenario, you'd fetch this data from your database.
+    // Here, we'll use our mock service to get a diverse set of student data.
+    const students = await getCompanyStudents();
+
+    // The AI will perform the aggregation. We just need to pass it the raw data.
+    const studentDataForAI = students.map(s => ({
+      location: s.location,
+      gender: s.gender,
+      socialCategory: s.socialCategory,
+    }));
     
+    const prompt = `
+      You are a data analyst specializing in diversity and inclusion metrics.
+      Based on the following list of student applicants, generate a JSON object
+      that summarizes the diversity distribution.
+
+      The output must be a JSON object with three keys:
+      1.  "geoDiversity": An array of objects, where each object has "name" (e.g., 'Urban', 'Rural'), "value" (count of students), and "fill" (a unique hex color code, e.g., '#8884d8'). Categorize locations like 'Mumbai', 'Delhi', 'Bangalore' as 'Urban', and others as 'Rural'.
+      2.  "socialCategory": An array of objects, where each object has "name" (the social category, e.g., 'General', 'OBC') and "value" (count of students).
+      3.  "genderDiversity": An array of objects, where each object has "name" (the gender), "value" (the count), and "fill" (a unique hex color code).
+
+      Student Data:
+      ${JSON.stringify(studentDataForAI, null, 2)}
+    `;
+
+    const { output } = await ai.generate({
+      model: 'googleai/gemini-1.5-flash',
+      prompt: prompt,
+      output: {
+        format: 'json',
+        schema: FairnessReportDataSchema
+      },
+    });
+
     if (!output) {
-      throw new Error('Failed to generate fairness report data.');
+      throw new Error("Failed to generate fairness report data from AI.");
     }
     return output;
   }
 );
-
-export async function getFairnessReportData(): Promise<FairnessReportData> {
-    return fairnessReportFlow();
-}

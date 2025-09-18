@@ -1,60 +1,53 @@
 'use server';
 /**
- * @fileOverview An AI flow that analyzes a student's skill gap for desired roles.
+ * @fileOverview A skill gap analysis AI agent.
  *
- * - skillGapAnalysis - A function that performs the analysis and returns gaps and recommendations.
+ * - skillGapAnalysis - A function that handles the skill gap analysis process.
  * - SkillGapAnalysisInput - The input type for the skillGapAnalysis function.
  * - SkillGapAnalysisOutput - The return type for the skillGapAnalysis function.
  */
-
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-
-export const SkillGapAnalysisInputSchema = z.object({
-  studentSkills: z.string().describe("The student's current skills, comma-separated."),
-  desiredRoles: z.string().describe("The internship roles the student is interested in, comma-separated."),
-});
-export type SkillGapAnalysisInput = z.infer<typeof SkillGapAnalysisInputSchema>;
-
-export const SkillGapAnalysisOutputSchema = z.object({
-  skillGaps: z.string().describe("A comma-separated list of skills the student is missing for the desired roles."),
-  recommendedCourses: z.string().describe("A comma-separated list of recommended courses or certifications to bridge the skill gaps."),
-});
-export type SkillGapAnalysisOutput = z.infer<typeof SkillGapAnalysisOutputSchema>;
-
-const prompt = ai.definePrompt({
-  name: 'skillGapAnalysisPrompt',
-  input: { schema: SkillGapAnalysisInputSchema },
-  output: { schema: SkillGapAnalysisOutputSchema },
-  prompt: `You are an AI career advisor. Analyze the skill gap for a student based on their current skills and desired internship roles.
-
-Student's Skills: {{{studentSkills}}}
-Desired Roles: {{{desiredRoles}}}
-
-Identify the key skills missing for the desired roles and recommend a list of 3-5 specific courses or certifications to bridge these gaps.
-Provide the output as a comma-separated list for skillGaps and recommendedCourses. For courses, you can suggest a platform in parenthesis, e.g., 'Machine Learning (Coursera)'.
-`,
-});
-
-const skillGapAnalysisFlow = ai.defineFlow(
-  {
-    name: 'skillGapAnalysisFlow',
-    inputSchema: SkillGapAnalysisInputSchema,
-    outputSchema: SkillGapAnalysisOutputSchema,
-  },
-  async (input) => {
-    const { output } = await ai.generate({
-      model: 'googleai/gemini-1.5-flash',
-      prompt: await prompt.render({ input }),
-    });
-    if (!output) {
-      throw new Error('Failed to generate skill gap analysis.');
-    }
-    return output;
-  }
-);
+import { SkillGapAnalysisInputSchema, SkillGapAnalysisOutputSchema, SkillGapAnalysisInput, SkillGapAnalysisOutput } from '@/ai/schema-and-types';
 
 
 export async function skillGapAnalysis(input: SkillGapAnalysisInput): Promise<SkillGapAnalysisOutput> {
-  return skillGapAnalysisFlow(input);
+    return skillGapAnalysisFlow(input);
 }
+
+const skillGapAnalysisPrompt = ai.definePrompt({
+    name: 'skillGapAnalysisPrompt',
+    input: { schema: SkillGapAnalysisInputSchema },
+    output: { schema: SkillGapAnalysisOutputSchema },
+    prompt: `You are an expert career development coach.
+  
+  A student has provided their current skills and the roles they are interested in. Your task is to:
+  1.  Analyze the gap between the student's current skills and the skills typically required for their desired roles.
+  2.  Identify the key missing skills (the "skillGaps").
+  3.  Recommend a list of online courses or certifications that can help bridge these gaps. For each course, suggest a popular platform in parentheses, e.g., "Advanced Python (Coursera)".
+  4.  The output for skillGaps and recommendedCourses should be a single comma-separated string for each.
+  
+  Student's Current Skills: {{{studentSkills}}}
+  Desired Internship Roles: {{{desiredRoles}}}
+  
+  Return a JSON object with two keys: "skillGaps" and "recommendedCourses". Do not include any other text or explanations.`,
+});
+
+const skillGapAnalysisFlow = ai.defineFlow(
+    {
+      name: 'skillGapAnalysisFlow',
+      inputSchema: SkillGapAnalysisInputSchema,
+      outputSchema: SkillGapAnalysisOutputSchema,
+    },
+    async (input) => {
+        const { output } = await ai.generate({
+            model: 'googleai/gemini-1.5-flash',
+            prompt: await skillGapAnalysisPrompt.render({ input }),
+            output: {
+                format: 'json',
+                schema: SkillGapAnalysisOutputSchema,
+            },
+        });
+        return output!;
+    }
+);

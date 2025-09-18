@@ -1,49 +1,51 @@
 'use server';
 /**
- * @fileOverview An AI flow that matches students with internships based on their profile.
+ * @fileOverview An internship matching AI agent.
  *
- * - matchInternships - A function that finds and returns suitable internships.
+ * - matchInternships - A function that handles the internship matching process.
  * - MatchInternshipsInput - The input type for the matchInternships function.
  * - MatchInternshipsOutput - The return type for the matchInternships function.
  */
+
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { internshipData } from '@/lib/data';
+import { MatchInternshipsInputSchema, MatchInternshipsOutputSchema, MatchInternshipsInput, MatchInternshipsOutput } from '@/ai/schema-and-types';
 
-export const MatchInternshipsInputSchema = z.object({
-  skills: z.array(z.string()),
-  interests: z.array(z.string()),
-  location: z.string(),
-});
-export type MatchInternshipsInput = z.infer<typeof MatchInternshipsInputSchema>;
 
-const InternshipSchema = z.object({
-  companyName: z.string(),
-  title: z.string(),
-  location: z.string(),
-  description: z.string(),
-  requiredSkills: z.array(z.string()),
-  compensation: z.string(),
-});
-export const MatchInternshipsOutputSchema = z.array(InternshipSchema);
-export type MatchInternshipsOutput = z.infer<typeof MatchInternshipsOutputSchema>;
-
-const prompt = ai.definePrompt({
+const internshipMatchingPrompt = ai.definePrompt({
   name: 'internshipMatchingPrompt',
-  input: { schema: MatchInternshipsInputSchema },
+  input: {
+    schema: z.object({
+        skills: z.array(z.string()),
+        interests: z.array(z.string()),
+        location: z.string(),
+        internships: MatchInternshipsOutputSchema, // Array of all available internships
+    }),
+  },
   output: { schema: MatchInternshipsOutputSchema },
-  prompt: `You are an expert career counselor. Your task is to match a student with the most suitable internships from the provided list.
+  prompt: `You are an expert career counselor. Your task is to find the most relevant internships for a student based on their profile.
 
 Student Profile:
-- Skills: {{{skills}}}
-- Interests: {{{interests}}}
+- Skills: {{#each skills}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+- Interests: {{#each interests}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
 - Preferred Location: {{{location}}}
 
 Available Internships:
-${JSON.stringify(internshipData, null, 2)}
+{{#each internships}}
+- Company: {{{this.companyName}}}
+  - Title: {{{this.title}}}
+  - Location: {{{this.location}}}
+  - Description: {{{this.description}}}
+  - Required Skills: {{#each this.requiredSkills}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+  - Compensation: {{{this.compensation}}}
+{{/each}}
 
-Based on the student's profile, find the top 5-8 most relevant internships from the list. Consider skill alignment, interest match, and location preference. For location, "Remote" is a valid match for any location preference.
-Return only the internships that are a good match. Do not invent new internships.
+Instructions:
+1.  Analyze the student's profile and the list of available internships.
+2.  Identify the top 5 most suitable internships.
+3.  Consider skills, interests, and location preferences for matching. A student preferring 'Bangalore' might also be open to 'Bengaluru'. 'Remote' is a valid location.
+4.  Return a JSON array of the matched internships. The output should only contain the JSON array. Do not include any other text or explanations.
 `,
 });
 
@@ -55,14 +57,17 @@ const internshipMatchingFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await ai.generate({
-      model: 'googleai/gemini-1.5-flash',
-      prompt: await prompt.render({ input }),
+        model: 'googleai/gemini-1.5-flash',
+        prompt: await internshipMatchingPrompt.render({
+            input: { ...input, internships: internshipData },
+        }),
+        output: {
+            format: 'json',
+            schema: MatchInternshipsOutputSchema,
+        },
     });
 
-    if (!output) {
-      throw new Error('Failed to generate internship matches.');
-    }
-    return output;
+    return output ?? [];
   }
 );
 
