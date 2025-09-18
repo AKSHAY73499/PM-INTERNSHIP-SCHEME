@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Candidate shortlisting AI flow.
@@ -5,15 +6,13 @@
  * - shortlistCandidates - A function that handles shortlisting candidates for an internship.
  */
 
-import { ai } from '@/ai/genkit';
-import { internshipData } from '@/lib/data';
+import {ai} from '@/ai/genkit';
 import {
     ShortlistCandidatesInputSchema,
     ShortlistCandidatesOutputSchema,
     type ShortlistCandidatesInput,
     type ShortlistCandidatesOutput
 } from '@/ai/schema-and-types';
-import { z } from 'zod';
 
 
 export async function shortlistCandidates(input: ShortlistCandidatesInput): Promise<ShortlistCandidatesOutput> {
