@@ -114,7 +114,7 @@ export default function Chatbot() {
         console.error("Text-to-speech error:", audioError);
         let description = "Could not generate audio for the response.";
         if (audioError?.message?.includes('429 Too Many Requests') || audioError?.message?.includes('quota')) {
-          description = "Audio generation is temporarily unavailable due to high demand. Please try again later."
+          description = "Audio generation is temporarily unavailable due to high demand (quota exceeded). Please try again later."
         }
         toast({
             variant: "destructive",
