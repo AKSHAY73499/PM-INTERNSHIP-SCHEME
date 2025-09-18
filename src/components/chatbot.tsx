@@ -2,11 +2,10 @@
 "use client";
 
 import { useState, useRef, useEffect, FormEvent } from "react";
-import { Bot, Mic, Send, X, Languages, Volume2 } from "lucide-react";
+import { Bot, Mic, Send, X, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import { multilingualChatbot } from "@/ai/flows/multilingual-chatbot-support";
-import { textToSpeech } from "@/ai/flows/text-to-speech";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -17,7 +16,6 @@ type Message = {
   id: string;
   text: string;
   isUser: boolean;
-  audioUrl?: string;
 };
 
 export default function Chatbot() {
@@ -28,7 +26,6 @@ export default function Chatbot() {
   const [isListening, setIsListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -79,13 +76,6 @@ export default function Chatbot() {
     setIsListening(!isListening);
   };
 
-  const handlePlayAudio = (audioUrl: string) => {
-    if (audioRef.current) {
-        audioRef.current.src = audioUrl;
-        audioRef.current.play();
-    }
-  };
-
   const handleSend = async (e: FormEvent | Event, messageText: string = input) => {
     e.preventDefault();
     if (!messageText.trim() || isLoading) return;
@@ -102,26 +92,6 @@ export default function Chatbot() {
       const botMessageId = (Date.now() + 1).toString();
       const botMessage: Message = { id: botMessageId, text: result.response, isUser: false };
       setMessages((prev) => [...prev, botMessage]);
-  
-      try {
-        const { audioUrl } = await textToSpeech({ text: result.response });
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === botMessageId ? { ...msg, audioUrl } : msg
-          )
-        );
-      } catch (audioError: any) {
-        console.error("Text-to-speech error:", audioError);
-        let description = "Could not generate audio for the response.";
-        if (audioError?.message?.includes('429 Too Many Requests') || audioError?.message?.includes('quota')) {
-          description = "Audio generation is temporarily unavailable due to high demand (quota exceeded). Please try again later."
-        }
-        toast({
-            variant: "destructive",
-            title: "Audio Generation Failed",
-            description: description,
-        });
-      }
   
     } catch (chatError: any) {
       console.error("Chatbot error:", chatError);
@@ -143,7 +113,6 @@ export default function Chatbot() {
 
   return (
     <>
-      <audio ref={audioRef} />
       <Button
         className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg"
         onClick={() => setIsOpen(true)}
@@ -192,16 +161,6 @@ export default function Chatbot() {
                     >
                       <p>{msg.text}</p>
                     </div>
-                     {!msg.isUser && msg.audioUrl && (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handlePlayAudio(msg.audioUrl!)}
-                            className="text-muted-foreground"
-                        >
-                            <Volume2 className="h-5 w-5" />
-                        </Button>
-                     )}
                   </div>
                 ))}
                  {isLoading && (
