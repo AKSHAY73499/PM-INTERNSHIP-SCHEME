@@ -113,8 +113,8 @@ export default function Chatbot() {
       } catch (audioError: any) {
         console.error("Text-to-speech error:", audioError);
         let description = "Could not generate audio for the response.";
-        if (audioError?.message?.includes('429 Too Many Requests')) {
-          description = "Audio generation failed due to API quota limits."
+        if (audioError?.message?.includes('429 Too Many Requests') || audioError?.message?.includes('quota')) {
+          description = "Audio generation is temporarily unavailable due to high demand. Please try again later."
         }
         toast({
             variant: "destructive",
@@ -127,8 +127,8 @@ export default function Chatbot() {
       console.error("Chatbot error:", chatError);
       const errorId = (Date.now() + 1).toString();
       let errorText = "Sorry, I couldn't process that. Please try again.";
-      if (chatError?.message?.includes('503 Service Unavailable')) {
-        errorText = "The AI service is currently overloaded. Please try again in a few moments.";
+      if (chatError?.message?.includes('503 Service Unavailable') || chatError?.message?.includes('quota')) {
+        errorText = "The AI service is currently overloaded or has reached its quota. Please try again in a few moments.";
       }
       const errorMessage: Message = {
         id: errorId,
@@ -240,5 +240,3 @@ export default function Chatbot() {
     </>
   );
 }
-
-    
