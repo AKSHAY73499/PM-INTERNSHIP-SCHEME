@@ -1,25 +1,50 @@
-
 'use server';
 /**
- * @fileOverview A flow for shortlisting candidates for an internship.
+ * @fileOverview Candidate shortlisting AI flow.
  *
- * - shortlistCandidates - A function that handles the candidate shortlisting process.
+ * - shortlistCandidates - A function that handles shortlisting candidates for an internship.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'zod';
+import { ai } from '@/ai/genkit';
+import { internshipData } from '@/lib/data';
 import {
-  ShortlistCandidatesInputSchema,
-  ShortlistCandidatesOutputSchema,
-  ShortlistCandidatesInput,
-  ShortlistCandidatesOutput,
+    ShortlistCandidatesInputSchema,
+    ShortlistCandidatesOutputSchema,
+    type ShortlistCandidatesInput,
+    type ShortlistCandidatesOutput
 } from '@/ai/schema-and-types';
+import { z } from 'zod';
 
-export async function shortlistCandidates(
-  input: ShortlistCandidatesInput
-): Promise<ShortlistCandidatesOutput> {
+
+export async function shortlistCandidates(input: ShortlistCandidatesInput): Promise<ShortlistCandidatesOutput> {
   return shortlistCandidatesFlow(input);
 }
+
+const shortlistCandidatesPrompt = ai.definePrompt(
+  {
+    name: 'shortlistCandidatesPrompt',
+    input: { schema: ShortlistCandidatesInputSchema },
+    output: { schema: ShortlistCandidatesOutputSchema },
+    prompt: `You are an expert hiring manager. Your task is to shortlist the top 5 candidates for an internship based on their skills and qualifications.
+
+Internship Details:
+- Title: {{{internship.title}}}
+- Required Skills: {{{internship.requiredSkills}}}
+
+Analyze the following student profiles and select the best matches. For each shortlisted candidate, provide a match score (out of 100) and a brief reasoning for your choice.
+
+Student Profiles:
+{{#each students}}
+- Name: {{{this.name}}}
+- Skills: {{{this.skills}}}
+- Qualifications: {{{this.qualifications}}}
+- Experience: {{{this.experience}}}
+{{/each}}
+
+Return a JSON array of the top 5 candidates.`,
+  }
+);
+
 
 const shortlistCandidatesFlow = ai.defineFlow(
   {
@@ -28,25 +53,7 @@ const shortlistCandidatesFlow = ai.defineFlow(
     outputSchema: ShortlistCandidatesOutputSchema,
   },
   async (input) => {
-    const { output } = await ai.generate({
-        model: 'googleai/gemini-1.5-flash',
-        prompt: `You are an expert hiring manager. Your task is to shortlist the top 5 candidates for an internship based on their profiles and the internship requirements.
-
-Internship Requirements:
-- Title: ${input.internship.title}
-- Required Skills: ${input.internship.requiredSkills.join(', ')}
-
-Student Profiles:
-${input.students.map(s => `- ${s.name}: Skills - ${s.skills.join(', ')}; Qualifications - ${s.qualifications}; Experience - ${s.experience || 'N/A'}`).join('\n')}
-
-Instructions:
-1. Analyze each student's profile against the internship requirements.
-2. Determine a "matchScore" (0-100) for each student.
-3. Provide a brief "reasoning" for why each student is a good or bad fit.
-4. Return a JSON array of the top 5 students, sorted by matchScore in descending order.
-5. The output should only contain the JSON array. Do not include any other text or explanations.`,
-        output: { schema: ShortlistCandidatesOutputSchema },
-    });
+    const { output } = await shortlistCandidatesPrompt(input);
     return output!;
   }
 );
