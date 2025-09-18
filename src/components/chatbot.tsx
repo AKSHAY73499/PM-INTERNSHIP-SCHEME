@@ -58,16 +58,20 @@ export default function Chatbot() {
 
         recognitionRef.current = recognition;
       } else {
-        toast({
-            variant: "destructive",
-            title: "Unsupported Browser",
-            description: "Voice recognition is not supported in your browser.",
-        })
+        console.warn("Speech recognition not supported by this browser.");
       }
     }
   }, [language, toast]);
 
   const handleListen = () => {
+    if (!recognitionRef.current) {
+         toast({
+            variant: "destructive",
+            title: "Unsupported Browser",
+            description: "Voice recognition is not supported in your browser.",
+        });
+        return;
+    }
     if (isListening) {
       recognitionRef.current?.stop();
     } else {
@@ -186,7 +190,7 @@ export default function Chatbot() {
                 onChange={(e) => setInput(e.target.value)}
                 disabled={isLoading}
               />
-              <Button type="button" variant={isListening ? "destructive" : "outline"} size="icon" onClick={handleListen} disabled={!recognitionRef.current || isLoading}>
+              <Button type="button" variant={isListening ? "destructive" : "outline"} size="icon" onClick={handleListen} disabled={isLoading}>
                 <Mic className="h-4 w-4" />
               </Button>
               <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
