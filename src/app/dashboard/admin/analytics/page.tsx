@@ -38,7 +38,9 @@ export default function AdminAnalyticsPage() {
                 getPlatformTotals(),
                 getRegionalData()
             ]);
+            // @ts-ignore
             setTotals(totalsData);
+            // @ts-ignore
             setRegionalData(regionData);
         } catch (error) {
             console.error("Failed to fetch analytics data:", error);
@@ -184,4 +186,3 @@ export default function AdminAnalyticsPage() {
     </div>
   );
 }
-
