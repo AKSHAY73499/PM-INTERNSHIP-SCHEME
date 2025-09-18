@@ -183,3 +183,5 @@ export default function InternshipCard({ internship }: { internship: Internship 
     </Dialog>
   );
 }
+
+    
