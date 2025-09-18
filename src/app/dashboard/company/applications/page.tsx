@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getCompanyInternships, getCompanyStudents } from "@/services/companyService";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function CompanyApplicationsPage() {
   const [internships, setInternships] = useState<any[]>([]);
@@ -249,4 +250,3 @@ export default function CompanyApplicationsPage() {
     </div>
   );
 }
-
