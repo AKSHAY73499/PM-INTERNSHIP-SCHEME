@@ -1,25 +1,21 @@
+
 'use server';
 /**
- * @fileOverview A multilingual chatbot AI agent.
+ * @fileOverview A multilingual chatbot that can answer questions about the internship platform.
  *
- * This file defines a Genkit flow for a multilingual chatbot that can respond
- * to user queries in English, Kannada, or Hindi. It also includes functionality
- * for text-to-speech to provide audio responses.
- *
- * - multilingualChatbot - The main flow function for the chatbot.
- * - ChatbotInput - The input type for the chatbot function.
- * - ChatbotOutput - The return type for the chatbot function.
+ * - multilingualChatbot - A function that handles the chatbot conversation.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'zod';
-import { ChatbotInputSchema, ChatbotOutputSchema, ChatbotInput, ChatbotOutput } from '@/ai/schema-and-types';
+import { MultilingualChatbotSupportInputSchema, MultilingualChatbotSupportOutputSchema, type MultilingualChatbotSupportInput, type MultilingualChatbotSupportOutput } from '../schema-and-types';
 
 
-const chatbotPrompt = ai.definePrompt({
-    name: 'chatbotPrompt',
-    input: { schema: ChatbotInputSchema },
-    prompt: `You are an expert and friendly assistant for the "AI for Internships" platform, a government-backed initiative in India. Your goal is to provide helpful, structured, and point-wise answers to user queries.
+const chatbotPrompt = ai.definePrompt(
+    {
+        name: 'chatbotPrompt',
+        input: { schema: MultilingualChatbotSupportInputSchema },
+        output: { schema: MultilingualChatbotSupportOutputSchema },
+        prompt: `You are an expert and friendly assistant for the "AI for Internships" platform, a government-backed initiative in India. Your goal is to provide helpful, structured, and point-wise answers to user queries.
 
     Always format your responses clearly using lists, bullet points, and bold text for readability.
     
@@ -68,34 +64,11 @@ const chatbotPrompt = ai.definePrompt({
     - **Selection**: AI matching, followed by potential assessments/interviews by the company.
     - **Certificate**: Awarded upon successful completion.
     <END_SCHEME_DATA>`,
-});
-
-const multilingualChatbotFlow = ai.defineFlow(
-    {
-        name: 'multilingualChatbotFlow',
-        inputSchema: ChatbotInputSchema,
-        outputSchema: ChatbotOutputSchema,
     },
-    async (input) => {
-        const { language, message } = input;
-
-        const llmResponse = await ai.generate({
-            model: 'googleai/gemini-1.5-flash',
-            prompt: await chatbotPrompt.render({ input }),
-            config: {
-                temperature: 0.3, // Lower temperature for more factual answers
-            },
-        });
-
-        const responseText = llmResponse.text;
-        
-        return {
-            response: responseText,
-        };
-    }
 );
 
 
-export async function multilingualChatbot(input: ChatbotInput): Promise<ChatbotOutput> {
-  return multilingualChatbotFlow(input);
+export async function multilingualChatbot(input: MultilingualChatbotSupportInput): Promise<MultilingualChatbotSupportOutput> {
+    const llmResponse = await chatbotPrompt(input);
+    return llmResponse.output!;
 }
