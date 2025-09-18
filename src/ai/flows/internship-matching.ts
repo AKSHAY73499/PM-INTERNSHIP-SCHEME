@@ -1,19 +1,21 @@
 
 'use server';
 /**
- * @fileOverview Internship matching flow.
+ * @fileOverview A flow for matching students to internships.
  *
- * This file contains the Genkit flow for matching internships to students.
+ * - matchInternships - A function that handles the internship matching process.
  */
 
-import { ai } from '@/ai/genkit';
+import {ai} from '@/ai/genkit';
+import {z} from 'zod';
+import {
+  MatchInternshipsInputSchema,
+  MatchInternshipsOutputSchema,
+  MatchInternshipsInput,
+  MatchInternshipsOutput,
+} from '@/ai/schema-and-types';
 import { internshipData } from '@/lib/data';
-import { MatchInternshipsInput, MatchInternshipsOutput, MatchInternshipsInputSchema, MatchInternshipsOutputSchema } from '@/ai/schema-and-types';
 
-
-export async function matchInternships(input: MatchInternshipsInput): Promise<MatchInternshipsOutput> {
-  return internshipMatchingFlow(input);
-}
 
 const internshipMatchingPrompt = ai.definePrompt({
     name: 'internshipMatchingPrompt',
@@ -22,9 +24,9 @@ const internshipMatchingPrompt = ai.definePrompt({
     prompt: `You are an expert career counselor. Your task is to find the most relevant internships for a student based on their profile.
 
 Student Profile:
-- Skills: {{skills}}
-- Interests: {{interests}}
-- Preferred Location: {{location}}
+- Skills: {{{skills}}}
+- Interests: {{{interests}}}
+- Preferred Location: {{{location}}}
 
 Available Internships:
 {{{json internships}}}
@@ -34,21 +36,16 @@ Instructions:
 2.  Identify the top 5 most suitable internships.
 3.  Consider skills, interests, and location preferences for matching. A student preferring 'Bangalore' might also be open to 'Bengaluru'. 'Remote' is a valid location.
 4.  Return a JSON array of the matched internships. The output should only contain the JSON array. Do not include any other text or explanations.
-`
+`,
 });
 
 
-const internshipMatchingFlow = ai.defineFlow(
-  {
-    name: 'internshipMatchingFlow',
-    inputSchema: MatchInternshipsInputSchema,
-    outputSchema: MatchInternshipsOutputSchema,
-  },
-  async (input) => {
-    const { output } = await internshipMatchingPrompt({
-        ...input,
-        internships: internshipData,
-    });
-    return output!;
-  }
-);
+export async function matchInternships(
+  input: MatchInternshipsInput
+): Promise<MatchInternshipsOutput> {
+  const { output } = await internshipMatchingPrompt({
+    ...input,
+    internships: internshipData,
+  });
+  return output || [];
+}

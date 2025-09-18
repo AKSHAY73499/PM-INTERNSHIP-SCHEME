@@ -1,62 +1,52 @@
+
 'use server';
 /**
- * @fileOverview A candidate shortlisting AI agent.
+ * @fileOverview A flow for shortlisting candidates for an internship.
  *
  * - shortlistCandidates - A function that handles the candidate shortlisting process.
- * - ShortlistCandidatesInput - The input type for the shortlistCandidates function.
- * - ShortlistCandidatesOutput - The return type for the shortlistCandidates function.
  */
-import { ai } from '@/ai/genkit';
-import { z } from 'zod';
-import { ShortlistCandidatesInputSchema, ShortlistCandidatesOutputSchema, ShortlistCandidatesInput, ShortlistCandidatesOutput } from '@/ai/schema-and-types';
 
+import {ai} from '@/ai/genkit';
+import {z} from 'zod';
+import {
+  ShortlistCandidatesInputSchema,
+  ShortlistCandidatesOutputSchema,
+  ShortlistCandidatesInput,
+  ShortlistCandidatesOutput,
+} from '@/ai/schema-and-types';
 
-export async function shortlistCandidates(input: ShortlistCandidatesInput): Promise<ShortlistCandidatesOutput> {
-  return candidateShortlistingFlow(input);
+export async function shortlistCandidates(
+  input: ShortlistCandidatesInput
+): Promise<ShortlistCandidatesOutput> {
+  return shortlistCandidatesFlow(input);
 }
 
+const shortlistCandidatesFlow = ai.defineFlow(
+  {
+    name: 'shortlistCandidatesFlow',
+    inputSchema: ShortlistCandidatesInputSchema,
+    outputSchema: ShortlistCandidatesOutputSchema,
+  },
+  async (input) => {
+    const { output } = await ai.generate({
+        model: 'googleai/gemini-1.5-flash',
+        prompt: `You are an expert hiring manager. Your task is to shortlist the top 5 candidates for an internship based on their profiles and the internship requirements.
 
-const prompt = ai.definePrompt({
-    name: 'candidateShortlistingPrompt',
-    input: { schema: ShortlistCandidatesInputSchema },
-    output: { schema: ShortlistCandidatesOutputSchema },
-    prompt: `You are an expert HR manager responsible for shortlisting candidates for internships.
-  
-  Internship Details:
-  - Role: {{{internship.title}}}
-  - Required Skills: {{#each internship.requiredSkills}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
-  
-  You will be provided with a list of student applicants. Your task is to:
-  1.  Analyze each student's profile (skills, qualifications, experience).
-  2.  Determine if they are a good fit for the internship based on the required skills and their overall profile.
-  3.  Provide a "matchScore" from 0 to 100, where a higher score indicates a better fit.
-  4.  Write a brief "reasoning" (1-2 sentences) explaining why the candidate is or is not a good fit.
-  5.  Return a list of the top 5 candidates, sorted by their match score in descending order.
-  
-  Student Applicants:
-  {{#each students}}
-  - Name: {{{this.name}}}
-    - Skills: {{#each this.skills}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
-    - Qualifications: {{{this.qualifications}}}
-    - Experience: {{{this.experience}}}
-  {{/each}}`,
-  });
+Internship Requirements:
+- Title: ${input.internship.title}
+- Required Skills: ${input.internship.requiredSkills.join(', ')}
 
-const candidateShortlistingFlow = ai.defineFlow(
-    {
-        name: 'candidateShortlistingFlow',
-        inputSchema: ShortlistCandidatesInputSchema,
-        outputSchema: ShortlistCandidatesOutputSchema,
-    },
-    async (input) => {
-        const { output } = await ai.generate({
-            model: 'googleai/gemini-1.5-flash',
-            prompt: await prompt.render({ input }),
-            output: {
-                format: 'json',
-                schema: ShortlistCandidatesOutputSchema,
-            },
-        });
-        return output ?? [];
-    }
+Student Profiles:
+${input.students.map(s => `- ${s.name}: Skills - ${s.skills.join(', ')}; Qualifications - ${s.qualifications}; Experience - ${s.experience || 'N/A'}`).join('\n')}
+
+Instructions:
+1. Analyze each student's profile against the internship requirements.
+2. Determine a "matchScore" (0-100) for each student.
+3. Provide a brief "reasoning" for why each student is a good or bad fit.
+4. Return a JSON array of the top 5 students, sorted by matchScore in descending order.
+5. The output should only contain the JSON array. Do not include any other text or explanations.`,
+        output: { schema: ShortlistCandidatesOutputSchema },
+    });
+    return output!;
+  }
 );
