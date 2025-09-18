@@ -3,26 +3,28 @@
 /**
  * @fileOverview A multilingual chatbot that can answer questions about the internship platform.
  *
- * - multilingualChatbot - A function that handles the chatbot conversation.
+ * - multilingualChatbot - A function that handles the chatbot interaction.
+ * - MultilingualChatbotInput - The input type for the chatbot function.
+ * - MultilingualChatbotOutput - The return type for the chatbot function.
  */
 
 import { ai } from '@/ai/genkit';
-import { MultilingualChatbotSupportInputSchema, MultilingualChatbotSupportOutputSchema, type MultilingualChatbotSupportInput, type MultilingualChatbotSupportOutput } from '../schema-and-types';
+import { MultilingualChatbotInputSchema, MultilingualChatbotOutputSchema, type MultilingualChatbotInput, type MultilingualChatbotOutput } from '../schema-and-types';
 
 
 const chatbotPrompt = ai.definePrompt(
-    {
-        name: 'chatbotPrompt',
-        input: { schema: MultilingualChatbotSupportInputSchema },
-        output: { schema: MultilingualChatbotSupportOutputSchema },
-        prompt: `You are an expert and friendly assistant for the "AI for Internships" platform, a government-backed initiative in India. Your goal is to provide helpful, structured, and point-wise answers to user queries.
+  {
+    name: 'chatbotPrompt',
+    input: { schema: MultilingualChatbotInputSchema },
+    output: { schema: MultilingualChatbotOutputSchema },
+    prompt: `You are an expert and friendly assistant for the "AI for Internships" platform, a government-backed initiative in India. Your goal is to provide helpful, structured, and point-wise answers to user queries.
 
     Always format your responses clearly using lists, bullet points, and bold text for readability.
     
-    The user is asking a question in the following language: {{{language}}}.
+    The user is asking a question in the following language: {{language}}.
     You MUST respond in the same language.
     
-    User's message: {{{message}}}
+    User's message: {{message}}
 
     Here is the detailed information about the Prime Minister's Internship Scheme. Use this as your primary source of truth.
     
@@ -64,11 +66,22 @@ const chatbotPrompt = ai.definePrompt(
     - **Selection**: AI matching, followed by potential assessments/interviews by the company.
     - **Certificate**: Awarded upon successful completion.
     <END_SCHEME_DATA>`,
-    },
+  }
 );
 
 
-export async function multilingualChatbot(input: MultilingualChatbotSupportInput): Promise<MultilingualChatbotSupportOutput> {
-    const llmResponse = await chatbotPrompt(input);
-    return llmResponse.output!;
+const multilingualChatbotFlow = ai.defineFlow(
+    {
+        name: 'multilingualChatbotFlow',
+        inputSchema: MultilingualChatbotInputSchema,
+        outputSchema: MultilingualChatbotOutputSchema,
+    },
+    async (input) => {
+        const { output } = await chatbotPrompt(input);
+        return output!;
+    }
+);
+
+export async function multilingualChatbot(input: MultilingualChatbotInput): Promise<MultilingualChatbotOutput> {
+    return multilingualChatbotFlow(input);
 }
