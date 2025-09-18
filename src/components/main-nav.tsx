@@ -14,6 +14,7 @@ import {
   CheckCircle,
   BarChart,
   FileText,
+  List,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -33,6 +34,7 @@ const studentLinks = [
 const companyLinks = [
   { href: "/dashboard/company", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/company/post-internship", label: "Post Internship", icon: Briefcase },
+  { href: "/dashboard/company/manage-internships", label: "Manage Internships", icon: List },
   { href: "/dashboard/company/applications", label: "Applications", icon: Search },
 ];
 
