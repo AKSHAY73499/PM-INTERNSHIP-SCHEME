@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { Send, MapPin, DollarSign, TrendingUp, Bookmark, Building, Briefcase } from "lucide-react";
+import { Send, MapPin, TrendingUp, Bookmark, Briefcase } from "lucide-react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -149,7 +149,6 @@ export default function InternshipCard({ internship }: { internship: Internship 
                     <span>{internship.location}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
                     <span>{internship.compensation}</span>
                 </div>
             </div>
