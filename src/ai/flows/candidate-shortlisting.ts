@@ -6,17 +6,20 @@
  * - shortlistCandidates - A function that handles shortlisting candidates for an internship.
  */
 
-import {ai} from '@/ai/genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'zod';
 import {
     ShortlistCandidatesInputSchema,
     ShortlistCandidatesOutputSchema,
     type ShortlistCandidatesInput,
-    type ShortlistCandidatesOutput
+    type ShortlistCandidatesOutput,
+    type ShortlistedCandidate
 } from '@/ai/schema-and-types';
 
 
-export async function shortlistCandidates(input: ShortlistCandidatesInput): Promise<ShortlistCandidatesOutput> {
-  return shortlistCandidatesFlow(input);
+export async function shortlistCandidates(input: ShortlistCandidatesInput): Promise<ShortlistedCandidate[]> {
+  const result = await shortlistCandidatesFlow(input);
+  return result;
 }
 
 const shortlistCandidatesPrompt = ai.definePrompt(

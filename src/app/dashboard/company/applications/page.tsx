@@ -11,8 +11,9 @@ import { Loader2, Sparkles, User, GraduationCap, Briefcase, XCircle, CheckCircle
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getCompanyInternships, getCompanyStudents, getShortlistedCandidates, ShortlistedCandidate } from "@/services/companyService";
+import { getCompanyInternships, getCompanyStudents, getShortlistedCandidates } from "@/services/companyService";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { ShortlistedCandidate } from "@/ai/schema-and-types";
 
 export default function CompanyApplicationsPage() {
   const [internships, setInternships] = useState<any[]>([]);
