@@ -117,7 +117,7 @@ export default function AdminDashboardPage() {
             <ShieldCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totals?.pendingVerifications || 4}</div>
+            {isLoading || !totals ? <Skeleton className="h-8 w-12" /> : <div className="text-2xl font-bold">{totals.pendingVerifications}</div>}
              <p className="text-xs text-muted-foreground">Items needing manual review</p>
           </CardContent>
         </Card>

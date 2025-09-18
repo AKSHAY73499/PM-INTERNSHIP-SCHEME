@@ -1,80 +1,92 @@
-
 'use server';
-
 /**
- * @fileOverview AI-powered tool that shortlists student candidates for an internship.
+ * @fileOverview An AI flow for shortlisting student candidates for an internship.
  *
- * - shortlistCandidates - A function that handles the candidate shortlisting process.
+ * - shortlistCandidates - A function that takes internship and student data and returns a ranked list of candidates.
  * - ShortlistCandidatesInput - The input type for the shortlistCandidates function.
  * - ShortlistCandidatesOutput - The return type for the shortlistCandidates function.
  */
+import { ai } from '@/ai/genkit';
+import { z } from 'zod';
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-
-const StudentProfileSchema = z.object({
-  name: z.string().describe("The student's full name."),
-  skills: z.array(z.string()).describe("A list of the student's skills."),
-  qualifications: z.string().describe("The student's qualifications (e.g., degree, university)."),
-  experience: z.string().optional().describe("A summary of the student's relevant experience."),
+const StudentSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  skills: z.array(z.string()),
+  experience: z.string().optional(),
+  qualifications: z.string(),
 });
 
-const InternshipDetailsSchema = z.object({
-  title: z.string().describe("The title of the internship."),
-  requiredSkills: z.array(z.string()).describe("A list of skills required for the internship."),
+const InternshipSchema = z.object({
+  title: z.string(),
+  requiredSkills: z.array(z.string()),
 });
 
-const ShortlistCandidatesInputSchema = z.object({
-  internship: InternshipDetailsSchema,
-  students: z.array(StudentProfileSchema).describe("A list of student profiles to evaluate."),
+export const ShortlistCandidatesInputSchema = z.object({
+  students: z.array(StudentSchema),
+  internship: InternshipSchema,
 });
 export type ShortlistCandidatesInput = z.infer<typeof ShortlistCandidatesInputSchema>;
 
-
-const ShortlistedCandidateSchema = z.object({
-    name: z.string().describe("The student's name."),
-    matchScore: z.number().min(0).max(100).describe("The AI-calculated match score percentage (0-100)."),
-    reasoning: z.string().describe("A brief explanation for why the candidate is a good match."),
-    skills: z.array(z.string()).describe("The student's skills."),
-    qualifications: z.string().describe("The student's qualifications."),
-    experience: z.string().optional().describe("A summary of the student's experience."),
+const CandidateSchema = z.object({
+  name: z.string(),
+  skills: z.array(z.string()),
+  experience: z.string().optional(),
+  qualifications: z.string(),
+  matchScore: z.number().describe('The match score from 0-100 for the candidate.'),
+  reasoning: z.string().describe('A brief reasoning for why the candidate is a good match.'),
 });
 
-const ShortlistCandidatesOutputSchema = z.array(ShortlistedCandidateSchema).describe("A sorted list of shortlisted candidates, from highest to lowest match score.");
+export const ShortlistCandidatesOutputSchema = z.array(CandidateSchema);
 export type ShortlistCandidatesOutput = z.infer<typeof ShortlistCandidatesOutputSchema>;
 
-export async function shortlistCandidates(input: ShortlistCandidatesInput): Promise<ShortlistCandidatesOutput> {
-  return shortlistCandidatesFlow(input);
-}
-
 const prompt = ai.definePrompt({
-  name: 'shortlistCandidatesPrompt',
-  input: {schema: ShortlistCandidatesInputSchema},
-  output: {schema: ShortlistCandidatesOutputSchema},
-  prompt: `You are an expert HR recruitment AI for a government internship portal. Your task is to analyze a list of student applicants and shortlist the best candidates for a specific internship.
+  name: 'candidateShortlistingPrompt',
+  input: { schema: ShortlistCandidatesInputSchema },
+  output: { schema: ShortlistCandidatesOutputSchema },
+  prompt: `You are an expert hiring manager.
+You are tasked with shortlisting the top 5 candidates for an internship based on their skills, experience, and qualifications.
 
-  Internship Role: {{{internship.title}}}
-  Required Skills: {{#each internship.requiredSkills}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+Internship Role: {{{internship.title}}}
+Required Skills: {{{internship.requiredSkills}}}
 
-  Here are the student profiles:
-  {{#each students}}
-  - Name: {{{name}}}, Skills: {{#each skills}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}, Qualifications: {{{qualifications}}}, Experience: {{{experience}}}
-  {{/each}}
+Available Candidates:
+{{#each students}}
+- Name: {{name}}
+  Skills: {{skills}}
+  Experience: {{experience}}
+  Qualifications: {{qualifications}}
+{{/each}}
 
-  Analyze each student's profile against the internship requirements. Calculate a "matchScore" from 0 to 100 based on how well their skills, qualifications, and experience align with the role. Provide a brief "reasoning" for your score.
-
-  Return a JSON array of the shortlisted candidates, sorted in descending order by their matchScore. For each candidate, include their name, skills, qualifications, experience, the calculated matchScore, and your reasoning.
-  `,
+Please provide a ranked list of the top 5 candidates who are the best fit for this role. For each candidate, provide their name, skills, qualifications, experience, a match score (0-100), and a brief reasoning for your recommendation. The match score should be based on how well their skills align with the required skills, their qualifications, and their experience.
+`,
 });
 
-const shortlistCandidatesFlow = ai.defineFlow(
+const candidateShortlistingFlow = ai.defineFlow(
   {
-    name: 'shortlistCandidatesFlow',
+    name: 'candidateShortlistingFlow',
     inputSchema: ShortlistCandidatesInputSchema,
     outputSchema: ShortlistCandidatesOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
+  async (input) => {
+    const { output } = await ai.generate({
+      model: 'googleai/gemini-1.5-flash',
+      prompt: await prompt.render({ input }),
+      config: {
+        temperature: 0.2, // Lower temperature for more deterministic output
+      },
+    });
+
+    if (!output) {
+      throw new Error('Failed to generate candidate shortlist.');
+    }
+
+    // Sort candidates by match score in descending order
+    return output.sort((a: any, b: any) => b.matchScore - a.matchScore);
   }
 );
+
+
+export async function shortlistCandidates(input: ShortlistCandidatesInput): Promise<ShortlistCandidatesOutput> {
+  return candidateShortlistingFlow(input);
+}

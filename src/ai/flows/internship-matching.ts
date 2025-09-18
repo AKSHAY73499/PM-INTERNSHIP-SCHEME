@@ -1,68 +1,50 @@
-
 'use server';
 /**
- * @fileOverview An internship matching AI flow.
+ * @fileOverview An AI flow that matches students with internships based on their profile.
  *
- * - matchInternships - A function that handles the internship matching process.
+ * - matchInternships - A function that finds and returns suitable internships.
  * - MatchInternshipsInput - The input type for the matchInternships function.
  * - MatchInternshipsOutput - The return type for the matchInternships function.
  */
-
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { getInternships } from '@/services/internshipService';
+import { internshipData } from '@/lib/data';
 
-const MatchInternshipsInputSchema = z.object({
-  skills: z.array(z.string()).describe('The skills of the student.'),
-  interests: z.array(z.string()).describe('The interests of the student.'),
-  location: z.string().describe('The preferred location of the student.'),
+export const MatchInternshipsInputSchema = z.object({
+  skills: z.array(z.string()),
+  interests: z.array(z.string()),
+  location: z.string(),
 });
 export type MatchInternshipsInput = z.infer<typeof MatchInternshipsInputSchema>;
 
-const MatchInternshipsOutputSchema = z.array(
-  z.object({
-    companyName: z.string().describe("The name of the company."),
-    title: z.string().describe("The title of the internship."),
-    location: z.string().describe("The location of the internship."),
-    description: z.string().describe("A brief description of the internship."),
-    requiredSkills: z.array(z.string()).describe("The skills required for the internship."),
-    compensation: z.string().describe("The compensation for the internship."),
-  })
-);
+const InternshipSchema = z.object({
+  companyName: z.string(),
+  title: z.string(),
+  location: z.string(),
+  description: z.string(),
+  requiredSkills: z.array(z.string()),
+  compensation: z.string(),
+});
+export const MatchInternshipsOutputSchema = z.array(InternshipSchema);
 export type MatchInternshipsOutput = z.infer<typeof MatchInternshipsOutputSchema>;
-
-
-const internshipFinder = ai.defineTool(
-  {
-    name: 'internshipFinder',
-    description: 'Finds internships based on location.',
-    inputSchema: z.object({
-      location: z.string(),
-    }),
-    outputSchema: z.any(),
-  },
-  async (input) => {
-    return await getInternships(input.location);
-  }
-);
 
 const prompt = ai.definePrompt({
   name: 'internshipMatchingPrompt',
-  tools: [internshipFinder],
   input: { schema: MatchInternshipsInputSchema },
   output: { schema: MatchInternshipsOutputSchema },
-  prompt: `You are an expert career counselor. Your task is to match a student to suitable internships based on their skills, interests, and location.
+  prompt: `You are an expert career counselor. Your task is to match a student with the most suitable internships from the provided list.
 
-You have access to a tool 'internshipFinder' that can fetch available internships for a given location.
-
-Here is the student's profile:
+Student Profile:
 - Skills: {{{skills}}}
 - Interests: {{{interests}}}
-- Location: {{{location}}}
+- Preferred Location: {{{location}}}
 
-Use the internshipFinder tool to get internships for the student's preferred location. Then, from that list, select the top 5 most relevant internships for the student based on how well their skills and interests align with the internship requirements.
+Available Internships:
+${JSON.stringify(internshipData, null, 2)}
 
-Return the list of matched internships. Do not make up internships. Only use the ones provided by the tool.`,
+Based on the student's profile, find the top 5-8 most relevant internships from the list. Consider skill alignment, interest match, and location preference. For location, "Remote" is a valid match for any location preference.
+Return only the internships that are a good match. Do not invent new internships.
+`,
 });
 
 const internshipMatchingFlow = ai.defineFlow(
@@ -72,11 +54,19 @@ const internshipMatchingFlow = ai.defineFlow(
     outputSchema: MatchInternshipsOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
-    return output!;
+    const { output } = await ai.generate({
+      model: 'googleai/gemini-1.5-flash',
+      prompt: await prompt.render({ input }),
+    });
+
+    if (!output) {
+      throw new Error('Failed to generate internship matches.');
+    }
+    return output;
   }
 );
 
+
 export async function matchInternships(input: MatchInternshipsInput): Promise<MatchInternshipsOutput> {
-    return await internshipMatchingFlow(input);
+  return internshipMatchingFlow(input);
 }

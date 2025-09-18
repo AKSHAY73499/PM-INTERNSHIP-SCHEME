@@ -1,61 +1,39 @@
 'use server';
-
 /**
- * @fileOverview This file defines a Genkit flow for skill gap analysis.
+ * @fileOverview An AI flow that analyzes a student's skill gap for desired roles.
  *
- * The flow takes a student's current skills and desired internship roles as input,
- * identifies skill gaps, and recommends online courses and certifications to bridge those gaps.
- *
- * @exports `skillGapAnalysis` - The main function to trigger the skill gap analysis flow.
- * @exports `SkillGapAnalysisInput` - The input type for the skillGapAnalysis function.
- * @exports `SkillGapAnalysisOutput` - The output type for the skillGapAnalysis function.
+ * - skillGapAnalysis - A function that performs the analysis and returns gaps and recommendations.
+ * - SkillGapAnalysisInput - The input type for the skillGapAnalysis function.
+ * - SkillGapAnalysisOutput - The return type for the skillGapAnalysis function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'zod';
 
-const SkillGapAnalysisInputSchema = z.object({
-  studentSkills: z
-    .string()
-    .describe("A comma-separated list of the student's current skills."),
-  desiredRoles: z
-    .string()
-    .describe(
-      'A comma-separated list of the student\'s desired internship roles.'
-    ),
+export const SkillGapAnalysisInputSchema = z.object({
+  studentSkills: z.string().describe("The student's current skills, comma-separated."),
+  desiredRoles: z.string().describe("The internship roles the student is interested in, comma-separated."),
 });
 export type SkillGapAnalysisInput = z.infer<typeof SkillGapAnalysisInputSchema>;
 
-const SkillGapAnalysisOutputSchema = z.object({
-  skillGaps: z
-    .string()
-    .describe('A comma-separated list of identified skill gaps.'),
-  recommendedCourses: z
-    .string()
-    .describe(
-      'A comma-separated list of recommended online courses and certifications to bridge the skill gaps.'
-    ),
+export const SkillGapAnalysisOutputSchema = z.object({
+  skillGaps: z.string().describe("A comma-separated list of skills the student is missing for the desired roles."),
+  recommendedCourses: z.string().describe("A comma-separated list of recommended courses or certifications to bridge the skill gaps."),
 });
 export type SkillGapAnalysisOutput = z.infer<typeof SkillGapAnalysisOutputSchema>;
 
-export async function skillGapAnalysis(input: SkillGapAnalysisInput): Promise<SkillGapAnalysisOutput> {
-  return skillGapAnalysisFlow(input);
-}
-
 const prompt = ai.definePrompt({
   name: 'skillGapAnalysisPrompt',
-  input: {schema: SkillGapAnalysisInputSchema},
-  output: {schema: SkillGapAnalysisOutputSchema},
-  prompt: `You are a career advisor specializing in identifying skill gaps and recommending relevant online courses and certifications.
+  input: { schema: SkillGapAnalysisInputSchema },
+  output: { schema: SkillGapAnalysisOutputSchema },
+  prompt: `You are an AI career advisor. Analyze the skill gap for a student based on their current skills and desired internship roles.
 
-  Analyze the student's current skills and desired internship roles to identify skill gaps and provide personalized recommendations for online courses and certifications.
+Student's Skills: {{{studentSkills}}}
+Desired Roles: {{{desiredRoles}}}
 
-  Student's Current Skills: {{{studentSkills}}}
-  Desired Internship Roles: {{{desiredRoles}}}
-
-  Skill Gaps: A comma-separated list of the identified skill gaps.
-  Recommended Courses: A comma-separated list of recommended online courses and certifications to bridge the skill gaps.
-  `,
+Identify the key skills missing for the desired roles and recommend a list of 3-5 specific courses or certifications to bridge these gaps.
+Provide the output as a comma-separated list for skillGaps and recommendedCourses. For courses, you can suggest a platform in parenthesis, e.g., 'Machine Learning (Coursera)'.
+`,
 });
 
 const skillGapAnalysisFlow = ai.defineFlow(
@@ -64,9 +42,19 @@ const skillGapAnalysisFlow = ai.defineFlow(
     inputSchema: SkillGapAnalysisInputSchema,
     outputSchema: SkillGapAnalysisOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
+  async (input) => {
+    const { output } = await ai.generate({
+      model: 'googleai/gemini-1.5-flash',
+      prompt: await prompt.render({ input }),
+    });
+    if (!output) {
+      throw new Error('Failed to generate skill gap analysis.');
+    }
+    return output;
   }
 );
 
+
+export async function skillGapAnalysis(input: SkillGapAnalysisInput): Promise<SkillGapAnalysisOutput> {
+  return skillGapAnalysisFlow(input);
+}
