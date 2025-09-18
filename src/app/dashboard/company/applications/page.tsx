@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Sparkles, User, GraduationCap, Briefcase } from "lucide-react";
+import { Loader2, Sparkles, User, GraduationCap, Briefcase, XCircle, CheckCircle } from "lucide-react";
 import { shortlistCandidates, ShortlistCandidatesOutput } from "@/ai/flows/candidate-shortlisting";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getCompanyInternships, getCompanyStudents } from "@/services/companyService";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -89,6 +89,13 @@ export default function CompanyApplicationsPage() {
       setIsLoading(false);
     }
   };
+
+  const handleCandidateAction = (candidateName: string, action: 'offer' | 'reject') => {
+    toast({
+      title: `Candidate ${action === 'offer' ? 'Offered' : 'Rejected'}`,
+      description: `${candidateName} has been ${action === 'offer' ? 'sent an internship offer' : 'rejected'}.`,
+    });
+  }
 
   if (isLoadingData) {
       return (
@@ -190,7 +197,7 @@ export default function CompanyApplicationsPage() {
                                 <TableCell className="text-right">
                                     <Dialog>
                                         <DialogTrigger asChild>
-                                            <Button>View Profile</Button>
+                                            <Button variant="outline">View Profile</Button>
                                         </DialogTrigger>
                                         <DialogContent className="sm:max-w-md">
                                             <DialogHeader>
@@ -227,9 +234,18 @@ export default function CompanyApplicationsPage() {
                                                     <p className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-md">{candidate.reasoning}</p>
                                                 </div>
                                             </div>
-                                             <DialogClose asChild>
-                                                <Button type="button" variant="secondary">Close</Button>
-                                             </DialogClose>
+                                            <DialogFooter className="gap-2">
+                                                <DialogClose asChild>
+                                                    <Button type="button" variant="outline" onClick={() => handleCandidateAction(candidate.name, 'reject')}>
+                                                        <XCircle className="mr-2 h-4 w-4"/> Reject
+                                                    </Button>
+                                                </DialogClose>
+                                                <DialogClose asChild>
+                                                    <Button type="button" onClick={() => handleCandidateAction(candidate.name, 'offer')}>
+                                                        <CheckCircle className="mr-2 h-4 w-4"/> Offer Internship
+                                                    </Button>
+                                                </DialogClose>
+                                            </DialogFooter>
                                         </DialogContent>
                                     </Dialog>
                                 </TableCell>
@@ -250,3 +266,5 @@ export default function CompanyApplicationsPage() {
     </div>
   );
 }
+
+    
