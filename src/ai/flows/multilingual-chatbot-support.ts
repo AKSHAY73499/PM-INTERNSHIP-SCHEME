@@ -2,6 +2,10 @@
 'use server';
 /**
  * @fileOverview A multilingual chatbot that can respond in English, Kannada, or Hindi.
+ *
+ * - multilingualChatbot - The main function that handles the chatbot logic.
+ * - ChatbotInput - The input type for the chatbot function.
+ * - ChatbotOutput - The return type for the chatbot function.
  */
 
 import { ai } from '@/ai/genkit';
@@ -14,17 +18,17 @@ const ChatbotInputSchema = z.object({
 export type ChatbotInput = z.infer<typeof ChatbotInputSchema>;
 
 const ChatbotOutputSchema = z.object({
-  response: z.string().describe('The chatbot\'s response in the specified language.'),
+  response: z.string().describe('The chatbot\'s response.'),
 });
 export type ChatbotOutput = z.infer<typeof ChatbotOutputSchema>;
 
 export async function multilingualChatbot(input: ChatbotInput): Promise<ChatbotOutput> {
-  return multilingualChatbotFlow(input);
+  return chatbotFlow(input);
 }
 
-const multilingualChatbotFlow = ai.defineFlow(
+const chatbotFlow = ai.defineFlow(
   {
-    name: 'multilingualChatbotFlow',
+    name: 'chatbotFlow',
     inputSchema: ChatbotInputSchema,
     outputSchema: ChatbotOutputSchema,
   },
@@ -32,17 +36,15 @@ const multilingualChatbotFlow = ai.defineFlow(
     const { language, message } = input;
 
     const llmResponse = await ai.generate({
-      model: 'googleai/gemini-pro',
+      model: 'googleai/gemini-1.5-flash',
       prompt: `You are a helpful assistant for an internship platform. Respond to the user's message in the specified language. Language: ${language}. Message: ${message}`,
       config: {
-        // Optional: Add any model-specific configuration here
+        // Add any model-specific configuration here
       },
     });
 
-    const responseText = llmResponse.text;
-
     return {
-      response: responseText,
+      response: llmResponse.text,
     };
   }
 );
