@@ -55,11 +55,10 @@ export default function Home() {
                 </div>
               </div>
               <Image
-                src="https://picsum.photos/seed/gov-portal/600/400"
+                src="https://wpblogassets.paytm.com/paytmblog/uploads/2024/11/518_PM-internship-Scheme.jpg"
                 width="600"
                 height="400"
-                alt="Hero"
-                data-ai-hint="building government"
+                alt="PM Internship Scheme"
                 className="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full"
               />
             </div>
