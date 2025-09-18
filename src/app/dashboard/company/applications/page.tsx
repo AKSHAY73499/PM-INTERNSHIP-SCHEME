@@ -8,11 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Sparkles, User, GraduationCap, Briefcase, XCircle, CheckCircle } from "lucide-react";
-import { shortlistCandidates, ShortlistCandidatesOutput } from "@/ai/flows/candidate-shortlisting";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getCompanyInternships, getCompanyStudents } from "@/services/companyService";
+import { getCompanyInternships, getCompanyStudents, getShortlistedCandidates, ShortlistedCandidate } from "@/services/companyService";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function CompanyApplicationsPage() {
@@ -21,7 +20,7 @@ export default function CompanyApplicationsPage() {
   const [selectedInternshipId, setSelectedInternshipId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
-  const [shortlist, setShortlist] = useState<ShortlistCandidatesOutput>([]);
+  const [shortlist, setShortlist] = useState<ShortlistedCandidate[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -64,25 +63,17 @@ export default function CompanyApplicationsPage() {
         const internship = internships.find(i => i.id === selectedInternshipId);
         if (!internship) throw new Error("Internship not found");
 
-      const result = await shortlistCandidates({
-        internship: {
-          title: internship.title,
-          requiredSkills: internship.requiredSkills,
-        },
-        students: students,
-      });
+      const result = await getShortlistedCandidates(selectedInternshipId);
 
       setShortlist(result);
 
     } catch (error: any) {
       console.error("Failed to shortlist candidates:", error);
       let description = "There was an error processing the candidate list. Please try again.";
-      if (error?.message?.includes('503 Service Unavailable')) {
-          description = "The AI service is currently overloaded. Please try again in a few moments.";
-      }
+      
        toast({
         variant: "destructive",
-        title: "AI Shortlisting Failed",
+        title: "Shortlisting Failed",
         description: description,
       });
     } finally {
@@ -266,5 +257,3 @@ export default function CompanyApplicationsPage() {
     </div>
   );
 }
-
-    

@@ -17,14 +17,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Loader2, MapPin } from "lucide-react";
-import { matchInternships, MatchInternshipsOutput } from "@/ai/flows/internship-matching";
 import InternshipCard from "./internship-card";
 import { useToast } from "@/hooks/use-toast";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useSearchParams } from "next/navigation";
+import { getMatchedInternships, MatchedInternship } from "@/services/studentService";
 
 // Add matchScore to the output schema
-type InternshipWithScore = MatchInternshipsOutput[number] & { matchScore?: number };
+type InternshipWithScore = MatchedInternship & { matchScore?: number };
 
 const formSchema = z.object({
   skills: z.string().min(1, "Please enter at least one skill."),
@@ -66,14 +66,7 @@ export default function InternshipMatcher() {
     setIsLoading(true);
     setInternships([]);
     try {
-      const skillsArray = data.skills.split(",").map((s) => s.trim());
-      const interestsArray = data.interests.split(",").map((i) => i.trim());
-
-      let result = await matchInternships({
-        skills: skillsArray,
-        interests: interestsArray,
-        location: data.location,
-      });
+      let result = await getMatchedInternships();
 
       // Add a random match score for demonstration
       const resultWithScores = result.map(internship => ({
@@ -85,9 +78,7 @@ export default function InternshipMatcher() {
     } catch (error: any) {
       console.error("Failed to match internships:", error);
       let description = "Could not fetch internship matches. Please try again.";
-      if (error?.message?.includes('503 Service Unavailable')) {
-          description = "The AI service is currently overloaded. Please try again in a few moments.";
-      }
+      
       toast({
         variant: "destructive",
         title: "Error",
@@ -258,5 +249,3 @@ export default function InternshipMatcher() {
     </div>
   );
 }
-
-    

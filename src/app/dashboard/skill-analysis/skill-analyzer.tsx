@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -9,11 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Loader2, Lightbulb, GraduationCap } from "lucide-react";
-import { skillGapAnalysis, SkillGapAnalysisOutput } from "@/ai/flows/skill-gap-analysis";
 import { useToast } from "@/hooks/use-toast";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
+import { getSkillGapAnalysis, SkillGapAnalysis } from "@/services/studentService";
 
 const formSchema = z.object({
   studentSkills: z.string().min(1, "Please enter at least one skill."),
@@ -23,7 +24,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function SkillAnalyzer() {
-  const [analysis, setAnalysis] = useState<SkillGapAnalysisOutput | null>(null);
+  const [analysis, setAnalysis] = useState<SkillGapAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const [profile] = useLocalStorage('user-profile', { skills: '', interests: '', experience: '' });
@@ -40,7 +41,7 @@ export default function SkillAnalyzer() {
     setIsLoading(true);
     setAnalysis(null);
     try {
-      const result = await skillGapAnalysis(data);
+      const result = await getSkillGapAnalysis();
       setAnalysis(result);
     } catch (error) {
       console.error("Failed to analyze skills:", error);
