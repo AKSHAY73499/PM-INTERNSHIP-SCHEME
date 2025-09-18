@@ -18,6 +18,7 @@ const formSchema = z.object({
   title: z.string().min(1, "Role is required"),
   requiredSkills: z.string().min(1, "Skills are required"),
   location: z.string().min(1, "Location is required"),
+  stipend: z.string().min(1, "Stipend is required"),
   capacity: z.coerce.number().min(1, "Capacity must be at least 1"),
 });
 
@@ -30,6 +31,7 @@ export default function PostInternshipPage() {
       title: "",
       requiredSkills: "",
       location: "",
+      stipend: "",
       capacity: 1,
     },
   });
@@ -109,6 +111,19 @@ export default function PostInternshipPage() {
                     <FormLabel>Location</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g., Mumbai, Remote" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="stipend"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Stipend</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., ₹25,000 / month" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
